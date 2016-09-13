@@ -5,6 +5,9 @@
 #include <curses.h>
 #include <signal.h>
 #include <string.h>
+
+/******************* FUNCTION DEFINITIONS **************/
+
 static void finish(int sig);
 
 void draw_cells( void );                    /* lets the user draw some starting cells */
@@ -14,15 +17,25 @@ void run( void );                           /* runs the simulation */
 void update( void );                        /* updates the simulation */
 uint8_t count_neighbours( const uint8_t x, const uint8_t y); /* counts nb neighbours of a cell */
 
+
+/******************* CUSTOM TYPES AND VALUES DEFINITIONS ****************/
+
 #define NB_LINES    24
 #define NB_COLUMNS  40
 
 #define ALIVE       '0'
 #define DEAD        ' '
 
-/* state of the cells */
+
+
+/******************* STATIC GLOBAL VARIABLES ******************/
+
 char Cells[ NB_COLUMNS ][ NB_LINES ];
 char Cells_Future[ NB_COLUMNS ][ NB_LINES ];
+
+
+/******************** CODE ************************/
+
 
 int main( void )
 {
@@ -42,7 +55,8 @@ int main( void )
     intrflush(stdscr, FALSE);
     keypad(stdscr, TRUE);
     nodelay(stdscr, TRUE);
-    /* init playfield */
+    
+    /* Init displayed playfield */
     for( i = 0u; i < NB_COLUMNS; ++i ) {
         mvaddch(0u,i,'+');
     }
