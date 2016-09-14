@@ -1,4 +1,6 @@
 *.out
 *.a2
 *.o
+*.map
+*.dsk
 gol

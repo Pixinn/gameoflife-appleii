@@ -10,6 +10,7 @@
 
 static void finish(int sig);
 
+void init_display( void );
 void draw_cells( void );                    /* lets the user draw some starting cells */
 void toggle_cell( uint8_t x, uint8_t y );   /* toggles the cell at the given coordinates */
 
@@ -39,13 +40,23 @@ char Cells_Future[ NB_COLUMNS ][ NB_LINES ];
 
 int main( void )
 {
-    uint8_t i;
-
     signal(SIGINT, finish); /* arrange interrupts to terminate */
 
     /* Initial state */
     memset( Cells, DEAD, sizeof(Cells) );
+    init_display();
+    
+    /* go */
+    draw_cells();
+    run();
 
+    endwin();
+    return 0;
+}
+
+
+void init_display( void )
+{
     /* Init ncurses */
     setlocale(LC_ALL, "");
     initscr();
@@ -57,6 +68,7 @@ int main( void )
     nodelay(stdscr, TRUE);
     
     /* Init displayed playfield */
+    uint8_t i;
     for( i = 0u; i < NB_COLUMNS; ++i ) {
         mvaddch(0u,i,'+');
     }
@@ -70,15 +82,7 @@ int main( void )
         mvaddch(i,NB_COLUMNS-1u,'+');
     }
     refresh();
-
-    /* go */
-    draw_cells();
-    run();
-
-    endwin();
-    return 0;
 }
-
 
 
 void draw_cells( void )

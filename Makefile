@@ -1,28 +1,25 @@
-# LINUX
-LINUX_CC	    := cc
-LINUX_CFLAGS	:= -Wall -Wextra -pedantic-errors -ansi -std=gnu99 -lncurses -lm
-LINUX_DFLAGS	:= -g -pg -O0
-LINUX_OUT	    := gol
-LINUX_SRC       := gol_linux.c
+LINUX_CC	:= cc
+LINUX_SRC	:= gol_linux.c
+LINUX_CFLAGS	:= -Wall -Wextra -pedantic-errors -ansi -std=gnu99 -lncurses -lm -O3
+LINUX_OUT	:= gol.out
 
-# APPLE II
-APPLE_CC	    := $(CC65_HOME)/bin/cl65
-APPLE_CFLAGS	:= -t apple2 -Oirs -v
-APPLE_OUT	    := gol.a2
-APPLE_SRC       := gol_apple.c
+APPLE2_CL	:= $(CC65_HOME)/bin/cl65
+APPLE2_CC	:= $(CC65_HOME)/bin/cc65
+APPLE2_SRC	:= gol_apple2.c
+APPLE2_MAP  := gol_apple2.map
+APPLE2_CFLAGS	:= -Oirs -v -t apple2
+APPLE2_OUT	:= gol.a2
 
-
-all:	linux apple
+all:	linux apple2
 
 linux:	$(LINUX_SRC)
-	$(LINUX_CC) -O3 -o $(LINUX_OUT) $? $(LINUX_CFLAGS)
+	$(LINUX_CC) -o $(LINUX_OUT) $? $(LINUX_CFLAGS)
 
-apple: $(APPLE_SRC)
-	$(APPLE_CC) $(APPLE_CFLAGS) $? -o $(APPLE_OUT)
-    
-    
-    
+apple2: $(APPLE2_SRC)
+		$(APPLE2_CL) -m $(APPLE2_MAP) -o $(APPLE2_OUT) $? $(APPLE2_CFLAGS)
+
+apple2-asm: $(APPLE2_SRC)
+				$(APPLE2_CC) $(APPLE2_CFLAGS) -r -T $?
+
 clean:	$(SRC)
-	rm -f $(LINUX_OUT) $(APPLE_OUT) gmon.out
-
-
+	rm -f $(LINUX_OUT) $(APPLE2_OUT) $(APPLE2_MAP) *.o *.s gmon.out
