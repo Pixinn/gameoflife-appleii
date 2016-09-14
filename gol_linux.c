@@ -90,10 +90,10 @@ void draw_cells( void )
     int quit = 0;
 
     int ch;
-    int y = NB_COLUMNS / 2;
-    int x = NB_LINES / 2;
+    int y = NB_LINES / 2;
+    int x = NB_COLUMNS / 2;
 
-    move(x,y);
+    move(y,x);
     refresh();
 
     while ( quit == 0)
@@ -102,16 +102,16 @@ void draw_cells( void )
 		ch = getch();
 		switch (ch) {
 		case KEY_LEFT:
-            if( x > 0 ) { move(y, --x); }
+            if( x > 1u ) { move(y, --x); }
 			break;
 		case KEY_DOWN:
-            if( y < NB_LINES-1 ) { move(++y, x); }
+            if( y < NB_LINES - 2u ) { move(++y, x); }
 			break;
 		case KEY_UP:
-            if( y > 0 ) { move(--y, x); }
+            if( y > 1u ) { move(--y, x); }
 			break;
 		case KEY_RIGHT:
-            if( x < NB_COLUMNS-1 ) {	move(y, ++x); }
+            if( x < NB_COLUMNS - 2u ) {	move(y, ++x); }
 			break;
 		case ' ':
             toggle_cell(x,y);
