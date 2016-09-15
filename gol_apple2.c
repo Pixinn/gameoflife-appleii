@@ -156,9 +156,15 @@ void run( void  )
     printf("Iteration: 1");
     while( ch != 'q')
     {
+        /* Evolving the cells */
         update();
+        /* Printing iterations */
         gotoxy(11u, NB_LINES);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
+        /* Testing key pressed */
+        if( kbhit() ){
+            ch = cgetc();
+        }
     }
 }
 
