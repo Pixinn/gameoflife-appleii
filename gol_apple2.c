@@ -139,12 +139,16 @@ void editor( void )
     #define KEY_UP      'i'
     #define KEY_RIGHT   'l'
 
-    uint8_t quit = 0;
+    uint8_t quit, x, y;
+    
+    gotoxy( 0u, NB_LINES );
+    printf("EDITOR   (D)one");
 
-    uint8_t x = NB_COLUMNS >> 1u;
-    uint8_t y = NB_LINES >> 1u;
+    x = NB_COLUMNS >> 1u;
+    y = NB_LINES >> 1u;
     gotoxy(x,y);
 
+    quit = 0;
     while ( quit == 0)
     {
         cursor(1);
@@ -165,7 +169,7 @@ void editor( void )
         case ' ':
                 x = toggle_cell( x, y );
                 break;
-        case 'q':
+        case 'd':
           quit = 1;
           break;
         }
@@ -201,13 +205,13 @@ void run( void  )
     cursor(0);
 
     gotoxy( 0u, NB_LINES );
-    printf("Iteration: 1");
+    printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
         update();
         /* Printing iterations */
-        gotoxy(11u, NB_LINES);
+        gotoxy(10u, NB_LINES);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ){
