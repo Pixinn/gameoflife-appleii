@@ -16,23 +16,25 @@ void toggle_cell( uint8_t x, uint8_t y );   /* toggles the cell at the given coo
 
 void run( void );                           /* runs the simulation */
 void update( void );                        /* updates the simulation */
-uint8_t count_neighbours( const uint8_t x, const uint8_t y); /* counts nb neighbours of a cell */
+void count_neighbours( uint8_t* cell, uint8_t* count ); /* counts nb neighbours of the cell */
 
 
 /******************* CUSTOM TYPES AND VALUES DEFINITIONS ****************/
 
-#define NB_LINES    24
+#define NB_LINES    23
 #define NB_COLUMNS  40
 
-#define ALIVE       '0'
-#define DEAD        ' '
+#define ALIVE       1u
+#define DEAD        0u
+#define SPRITE_ALIVE       '0'
+#define SPRITE_DEAD        ' '
 
 
 
 /******************* STATIC GLOBAL VARIABLES ******************/
 
-char Cells[ NB_COLUMNS ][ NB_LINES ];
-char Cells_Future[ NB_COLUMNS ][ NB_LINES ];
+uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
+uint8_t Cells_Future[ NB_COLUMNS ][ NB_LINES ];
 
 
 /******************** CODE ************************/
@@ -45,7 +47,7 @@ int main( void )
     /* Initial state */
     memset( Cells, DEAD, sizeof(Cells) );
     init_display();
-    
+
     /* go */
     draw_cells();
     run();
@@ -66,7 +68,7 @@ void init_display( void )
     intrflush(stdscr, FALSE);
     keypad(stdscr, TRUE);
     nodelay(stdscr, TRUE);
-    
+
     /* Init displayed playfield */
     uint8_t i;
     for( i = 0u; i < NB_COLUMNS; ++i ) {
@@ -87,11 +89,11 @@ void init_display( void )
 
 void draw_cells( void )
 {
-    int quit = 0;
+    uint8_t quit = 0u;
 
-    int ch;
-    int y = NB_LINES / 2;
-    int x = NB_COLUMNS / 2;
+    uint8_t ch;
+    uint8_t y = NB_LINES >> 1;
+    uint8_t x = NB_COLUMNS >> 1;
 
     move(y,x);
     refresh();
@@ -101,16 +103,16 @@ void draw_cells( void )
 		getyx(stdscr, y, x);
 		ch = getch();
 		switch (ch) {
-		case KEY_LEFT:
+		case 'j':
             if( x > 1u ) { move(y, --x); }
 			break;
-		case KEY_DOWN:
+		case 'k':
             if( y < NB_LINES - 2u ) { move(++y, x); }
 			break;
-		case KEY_UP:
+		case 'i':
             if( y > 1u ) { move(--y, x); }
 			break;
-		case KEY_RIGHT:
+		case 'l':
             if( x < NB_COLUMNS - 2u ) {	move(y, ++x); }
 			break;
 		case ' ':
@@ -133,20 +135,21 @@ void draw_cells( void )
 void toggle_cell( const uint8_t x, const uint8_t y )
 {
     if( x == 0u || x >= NB_COLUMNS-1 || y == 0u || y >= NB_LINES-1 ) { return; }
-    char* cell = &Cells[x][y];
+    uint8_t* cell = &Cells[x][y];
     if( *cell == DEAD ) {
         *cell = ALIVE;
+        mvaddch(y,x,SPRITE_ALIVE);
     } else {
         *cell = DEAD;
+        mvaddch(y,x,SPRITE_DEAD);
     }
-    mvaddch(y,x,*cell);
     refresh();
 }
 
 
 void run( void  )
 {
-    #define PERIOD_MS 500000u
+    #define PERIOD_MS 200000u
     curs_set(0);
     char ch = '\0';
     while( ch != 'q')
@@ -165,16 +168,18 @@ void update( void )
     {
         for(  x = 1u; x < NB_COLUMNS-1; ++x)
         {
-            uint8_t nb_neighbours = count_neighbours(x,y);
+            uint8_t nb_neighbours;
+            uint8_t* cell = &Cells[x-1u][y-1u];
+            count_neighbours( cell, &nb_neighbours );
             if( Cells[x][y] == ALIVE && \
                 (nb_neighbours < 2u || nb_neighbours > 3u )
             ) {
                 Cells_Future[x][y] = DEAD;
-                mvaddch(y,x,DEAD);
+                mvaddch(y,x,SPRITE_DEAD);
             }
             else if( Cells[x][y] == DEAD && nb_neighbours == 3u ) {
                 Cells_Future[x][y] = ALIVE;
-                mvaddch(y,x,ALIVE);
+                mvaddch(y,x,SPRITE_ALIVE);
             }
         }
     }
@@ -183,18 +188,13 @@ void update( void )
 }
 
 
-uint8_t count_neighbours( const uint8_t x, const uint8_t y)
+void count_neighbours( uint8_t* cell, uint8_t* count )
 {
-    uint8_t count = 0;
-    if( Cells[x-1][y-1] == ALIVE ) { ++count; }
-    if( Cells[x-1][y] == ALIVE ) { ++count; }
-    if( Cells[x-1][y+1] == ALIVE ) { ++count; }
-    if( Cells[x][y-1] == ALIVE ) { ++count; }
-    if( Cells[x][y+1] == ALIVE ) { ++count; }
-    if( Cells[x+1][y-1] == ALIVE ) { ++count; }
-    if( Cells[x+1][y] == ALIVE ) { ++count; }
-    if( Cells[x+1][y+1] == ALIVE ) { ++count; }
-    return count;
+    *count = *cell++; *count += *cell++; *count += *cell;
+    cell += NB_LINES - 2u;
+    *count += *cell; cell+=2 ; *count += *cell;
+    cell += NB_LINES - 2u;
+    *count += *cell++; *count += *cell++; *count += *cell;
 }
 
 static void finish(int sig)
