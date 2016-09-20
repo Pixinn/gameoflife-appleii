@@ -17,7 +17,7 @@ uint8_t toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at 
 
 void run( void );                           /* runs the simulation */
 void update( void );                        /* updates the simulation */
-void count_neighbours( uint8_t* cell, uint8_t* count ); /* counts nb neighbours of the cell */
+uint8_t __fastcall__  count_neighbours( uint8_t* cell ); /* counts nb neighbours of the cell */
 
 void quit( void );
 
@@ -224,7 +224,6 @@ void run( void  )
 
 void update( void )
 {
-    uint8_t nb_neighbours;
     uint8_t x, y;
     for( y = 1u; y < NB_LINES-1; ++y )
     {
@@ -232,7 +231,7 @@ void update( void )
         {
           register uint8_t nb_neighbours;
           uint8_t* cell = &Cells[x-1u][y-1u];
-          count_neighbours( cell, &nb_neighbours );
+          nb_neighbours = count_neighbours( cell );
           if( Cells[x][y] == ALIVE && \
               (nb_neighbours < 2u || nb_neighbours > 3u )
           ) {
@@ -248,12 +247,3 @@ void update( void )
     memcpy( Cells, Cells_Future, sizeof(Cells) );
 }
 
-
-void count_neighbours( uint8_t* cell, uint8_t* count )
-{
-    *count = *cell++; *count += *cell++; *count += *cell;
-    cell += JUMP_BEGINNING_NEXT_LINE;
-    *count += *cell; cell+=2 ; *count += *cell;
-    cell += JUMP_BEGINNING_NEXT_LINE;
-    *count += *cell++; *count += *cell++; *count += *cell;
-}
