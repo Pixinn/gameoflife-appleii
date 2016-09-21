@@ -225,24 +225,35 @@ void run( void  )
 void update( void )
 {
     uint8_t x, y;
-    for( y = 1u; y < NB_LINES-1; ++y )
+    uint8_t* cell_neighbourhoud = &Cells[0][0];         // cell_neighbourhoud = &Cells[0][0];
+    uint8_t* cell = cell_neighbourhoud + NB_LINES + 1u; // cell = &Cells[1][1];
+    uint8_t* cell_future = &Cells_Future[0][0] + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
+    for( y = 1u; y < NB_LINES - 1u; ++y )
     {
-        for(  x = 1u; x < NB_COLUMNS-1; ++x)
+
+        uint8_t* cell_line = cell;
+        uint8_t* cell_neighbourhoud_line = cell_neighbourhoud;
+        uint8_t* cell_future_line = cell_future;
+        for(  x = 1u; x < NB_COLUMNS - 1u; ++x)
         {
-          register uint8_t nb_neighbours;
-          uint8_t* cell = &Cells[x-1u][y-1u];
-          nb_neighbours = count_neighbours( cell );
-          if( Cells[x][y] == ALIVE && \
-              (nb_neighbours < 2u || nb_neighbours > 3u )
-          ) {
-                Cells_Future[x][y] = DEAD;
+            uint8_t nb_neighbours = count_neighbours( cell_neighbourhoud_line );
+            if( *cell_line == ALIVE && \
+                (nb_neighbours < 2u || nb_neighbours > 3u )
+            ) {
+                *cell_future_line = DEAD;
                 cputcxy( x, y, SPRITE_DEAD );
             }
-            else if( Cells[x][y] == DEAD && nb_neighbours == 3u ) {
-                Cells_Future[x][y] = ALIVE;
+            else if( *cell_line == DEAD && nb_neighbours == 3u ) {
+                *cell_future_line = ALIVE;
                 cputcxy( x, y, SPRITE_ALIVE );
             }
+            cell_line               += NB_LINES;
+            cell_neighbourhoud_line += NB_LINES;
+            cell_future_line        += NB_LINES;
         }
+        ++cell;
+        ++cell_neighbourhoud;
+        ++cell_future;
     }
     memcpy( Cells, Cells_Future, sizeof(Cells) );
 }

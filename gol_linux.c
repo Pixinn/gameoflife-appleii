@@ -16,13 +16,13 @@ void toggle_cell( uint8_t x, uint8_t y );   /* toggles the cell at the given coo
 
 void run( void );                           /* runs the simulation */
 void update( void );                        /* updates the simulation */
-void count_neighbours( uint8_t* cell, uint8_t* count ); /* counts nb neighbours of the cell */
+uint8_t count_neighbours( uint8_t* cell );  /* counts nb neighbours of the cell */
 
 
 /******************* CUSTOM TYPES AND VALUES DEFINITIONS ****************/
 
-#define NB_LINES    23
-#define NB_COLUMNS  40
+#define NB_LINES    23u
+#define NB_COLUMNS  40u
 
 #define ALIVE       1u
 #define DEAD        0u
@@ -164,37 +164,50 @@ void run( void  )
 void update( void )
 {
     uint8_t x, y;
-    for( y = 1u; y < NB_LINES-1; ++y )
+    uint8_t* cell_neighbourhoud = &Cells[0][0];         // cell_neighbourhoud = &Cells[0][0];
+    uint8_t* cell = cell_neighbourhoud + NB_LINES + 1u; // cell = &Cells[1][1];
+    uint8_t* cell_future = &Cells_Future[0][0] + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
+    for( y = 1u; y < NB_LINES - 1u; ++y )
     {
-        for(  x = 1u; x < NB_COLUMNS-1; ++x)
+
+        uint8_t* cell_line = cell;
+        uint8_t* cell_neighbourhoud_line = cell_neighbourhoud;
+        uint8_t* cell_future_line = cell_future;
+        for(  x = 1u; x < NB_COLUMNS - 1u; ++x)
         {
-            uint8_t nb_neighbours;
-            uint8_t* cell = &Cells[x-1u][y-1u];
-            count_neighbours( cell, &nb_neighbours );
-            if( Cells[x][y] == ALIVE && \
+            uint8_t nb_neighbours = count_neighbours( cell_neighbourhoud_line );
+            if( *cell_line == ALIVE && \
                 (nb_neighbours < 2u || nb_neighbours > 3u )
             ) {
-                Cells_Future[x][y] = DEAD;
+                *cell_future_line = DEAD;
                 mvaddch(y,x,SPRITE_DEAD);
             }
-            else if( Cells[x][y] == DEAD && nb_neighbours == 3u ) {
-                Cells_Future[x][y] = ALIVE;
+            else if( *cell_line == DEAD && nb_neighbours == 3u ) {
+                *cell_future_line = ALIVE;
                 mvaddch(y,x,SPRITE_ALIVE);
             }
+            cell_line               += NB_LINES;
+            cell_neighbourhoud_line += NB_LINES;
+            cell_future_line        += NB_LINES;
         }
+        ++cell;
+        ++cell_neighbourhoud;
+        ++cell_future;
     }
     memcpy( Cells, Cells_Future, sizeof(Cells) );
     refresh();
 }
 
 
-void count_neighbours( uint8_t* cell, uint8_t* count )
+uint8_t count_neighbours( uint8_t* cell )
 {
-    *count = *cell++; *count += *cell++; *count += *cell;
+    uint8_t count;
+    count = *cell++; count += *cell++; count += *cell;
     cell += NB_LINES - 2u;
-    *count += *cell; cell+=2 ; *count += *cell;
+    count += *cell; cell+=2 ; count += *cell;
     cell += NB_LINES - 2u;
-    *count += *cell++; *count += *cell++; *count += *cell;
+    count += *cell++; count += *cell++; count += *cell;
+    return count;
 }
 
 static void finish(int sig)
