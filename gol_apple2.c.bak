@@ -9,8 +9,6 @@
 
 /******************* FUNCTION DEFINITIONS **************/
 
-void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Inits the variables used in the ASM scope */
-
 void init_display( void );              /* Inits displayed playfield */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
@@ -18,8 +16,8 @@ uint8_t toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at 
                                                             Returns the cursor X position */
 
 void run( void );                           /* runs the simulation */
-void __fastcall__ update( void );      /* updates the simulation */
-void __fastcall__ update_asm( void );  /* updates the simulation */
+void __fastcall__ update( uint8_t* cells, uint8_t* cells_future );      /* updates the simulation */
+void __fastcall__ update_asm( uint8_t* cells, uint8_t* cells_future );  /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
 
 void quit( void );
@@ -58,14 +56,6 @@ int main( int argc, char** argv )
     (void)argc;
     (void)argv;
 
-    //+ DEBUG
-    //gotoxy(0,0);
-    //printf("Cells:0x%x - Cells_future:0x%x",(uint16_t)(&Cells[0][0]),(uint16_t)(&Cells_Future[0][0]));
-    //cgetc();
-    //- DEBUG
-
-    init_asm( (uint8_t*)Cells, (uint8_t*)Cells_Future );
-
     /* Running the state machine */
     while( State != STATE_QUIT )
     {
@@ -91,7 +81,7 @@ int main( int argc, char** argv )
                     State = STATE_QUIT;
                 }
                 break;
-            default:
+            default: 
                 printf("ERROR!");
                 State = STATE_QUIT;
                 break;
@@ -138,7 +128,7 @@ void draw_cells( void ) {
                 cputcxy ( x, y, SPRITE_DEAD );
             }
         }
-    }
+    } 
 }
 
 
@@ -150,7 +140,7 @@ void editor( void )
     #define KEY_RIGHT   'l'
 
     uint8_t quit, x, y;
-
+    
     gotoxy( 0u, NB_LINES );
     printf("EDITOR   (D)one");
 
@@ -208,18 +198,25 @@ uint8_t toggle_cell( const uint8_t x, const uint8_t y )
 
 
 void run( void  )
-{
+{    
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
     cursor(0);
 
+    //+ DEBUG
+    gotoxy(0,0);
+    printf("Cells:0x%x - Cells_future:0x%x",(uint16_t)(&Cells[0][0]),(uint16_t)(&Cells_Future[0][0]));
+    cgetc();
+    //- DEBUG
+    
+    
     gotoxy( 0u, NB_LINES );
     printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
-        update( );
+        update_asm( &Cells[0][0], &Cells_Future[0][0] );
         /* Printing iterations */
         gotoxy(10u, NB_LINES);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
@@ -232,38 +229,39 @@ void run( void  )
 }
 
 
-void __fastcall__ update( void )
-{
+void __fastcall__ update( uint8_t* cells, uint8_t* cells_future )
+{   
     uint8_t x, y;
-    uint8_t* cell_neighbourhoud = (uint8_t*)Cells;         // cell_neighbourhoud = &Cells[0][0];
-    uint8_t* cell_line = cell_neighbourhoud + NB_LINES + 1u; // cell_line = &Cells[1][1];
-    uint8_t* cell_future = (uint8_t*)Cells_Future + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
+    uint8_t* cell_neighbourhoud = cells;         // cell_neighbourhoud = &Cells[0][0];
+    uint8_t* cell = cell_neighbourhoud + NB_LINES + 1u; // cell = &Cells[1][1];
+    uint8_t* cell_future = cells_future + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
     for( y = 1u; y < NB_LINES - 1u; ++y )
     {
 
-        uint8_t* cell_curr = cell_line;
+        uint8_t* cell_line = cell;
         uint8_t* cell_neighbourhoud_line = cell_neighbourhoud;
         uint8_t* cell_future_line = cell_future;
         for(  x = 1u; x < NB_COLUMNS - 1u; ++x)
         {
             uint8_t nb_neighbours = count_neighbours( cell_neighbourhoud_line );
-            if( *cell_curr == ALIVE && \
+            if( *cell_line == ALIVE && \
                 (nb_neighbours < 2u || nb_neighbours > 3u )
             ) {
                 *cell_future_line = DEAD;
                 cputcxy( x, y, SPRITE_DEAD );
             }
-            else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
+            else if( *cell_line == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
                 cputcxy( x, y, SPRITE_ALIVE );
             }
-            cell_curr               += NB_LINES;
+            cell_line               += NB_LINES;
             cell_neighbourhoud_line += NB_LINES;
             cell_future_line        += NB_LINES;
         }
-        ++cell_line;
+        ++cell;
         ++cell_neighbourhoud;
         ++cell_future;
     }
-    memcpy( Cells, Cells_Future, sizeof(Cells) );
+    memcpy( cells, cells_future, sizeof(Cells) );
 }
+

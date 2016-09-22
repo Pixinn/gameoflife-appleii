@@ -2,4 +2,4 @@ Time to 50 iterations
 
 50ef808 : 111:94 
 555db95 :  38:51
-latest  :  15:43
+d0f9aef :  15:43

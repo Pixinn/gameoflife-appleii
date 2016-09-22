@@ -1,0 +1,87 @@
+
+    .include        "apple2.inc"
+    .include        "zeropage.inc"
+   
+    
+    .export _count_neighbours   
+    .export _update_asm
+    
+    .import _Cells
+    .import _Cells_Future
+    
+    
+    .define NB_LINES    23
+    .define NB_COLUMNS  40
+    .define JUMP_BEGINNING_NEXT_LINE NB_LINES - 2
+    
+    
+    
+    
+; ******************    
+;void __fastcall__ update( uint8_t* cells, uint8_t* cells_future )
+;cells_future in sreg
+;cells in ptr1
+;cells in neighbourhoud in ptr2
+;current cell in ptr3
+;future cell in ptr4
+_update_asm:
+
+    ;preambule
+    STA ptr1
+    STX ptr1+1
+    STA ptr2
+    STX ptr2+1
+
+    RTS
+    
+
+; ******************
+;uint8_t __fastcall__ count_neighbours( uint8_t* cell )
+;param: cell is in AX
+_count_neighbours:
+
+    ;ASSUMPTIONS:
+    ; -> A and Y (offset to starting ptr) won't overflow!
+
+    ;init
+    STA ptr1
+    STX ptr1+1
+    LDA #0
+    LDY #0
+    CLC
+    
+    ;acc 1st row
+    ADC (ptr1),Y
+    INY
+    ADC (ptr1),Y
+    INY
+    ADC (ptr1),Y
+    
+    ;next row    
+    STA tmp1
+    TYA
+    ADC #JUMP_BEGINNING_NEXT_LINE
+    TAY
+    LDA tmp1
+    ADC (ptr1),Y
+    INY
+    INY
+    ADC (ptr1),Y
+    
+    ;next row    
+    STA tmp1
+    TYA
+    ADC #JUMP_BEGINNING_NEXT_LINE
+    TAY
+    LDA tmp1
+    ADC (ptr1),Y
+    INY
+    ADC (ptr1),Y
+    INY
+    ADC (ptr1),Y
+    
+    ;return
+    TAX
+    LDX #0
+    RTS
+    
