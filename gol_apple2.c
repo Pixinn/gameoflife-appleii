@@ -7,6 +7,8 @@
 /* Specific headers */
 #include <conio.h>
 
+#include "gfx.h"
+
 /******************* FUNCTION DEFINITIONS **************/
 
 void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Inits the variables used in the ASM scope */
@@ -21,6 +23,7 @@ void run( void );                           /* runs the simulation */
 void __fastcall__ update( void );      /* updates the simulation */
 void __fastcall__ update_asm( void );  /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
+
 
 void quit( void );
 
@@ -76,6 +79,7 @@ int main( int argc, char** argv )
                 State = STATE_EDITOR;
                 break;
             case STATE_EDITOR:
+                mode_text();
                 editor();
                 State = STATE_RUN;
                 break;
@@ -92,6 +96,7 @@ int main( int argc, char** argv )
                 }
                 break;
             default:
+                mode_text();
                 printf("ERROR!");
                 State = STATE_QUIT;
                 break;
@@ -105,6 +110,7 @@ int main( int argc, char** argv )
 void quit( void )
 {
     uint8_t x, y;
+    mode_text();
     screensize (&x, &y);
     gotoxy( 1u, y-1u );
     printf("BYE BYE!");
@@ -209,11 +215,14 @@ uint8_t toggle_cell( const uint8_t x, const uint8_t y )
 
 void run( void  )
 {
+    uint8_t i;
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
-    cursor(0);
 
+    gfx_init( LOWRES, SPLIT );
+    gfx_fill( BLACK );
+    cursor(0);
     gotoxy( 0u, NB_LINES );
     printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
@@ -224,7 +233,7 @@ void run( void  )
         gotoxy(10u, NB_LINES);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
-        if( kbhit() ){
+        if( kbhit() ) {
             KeyPressed = cgetc();
             break;
         }
@@ -251,11 +260,13 @@ void __fastcall__ update( void )
                 (nb_neighbours < 2u || nb_neighbours > 3u )
             ) {
                 *cell_future_line = DEAD;
-                cputcxy( x, y, SPRITE_DEAD );
+                //cputcxy( x, y, SPRITE_DEAD );
+                gfx_pixel( BLACK, x, 2*y );
             }
             else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
-                cputcxy( x, y, SPRITE_ALIVE );
+                gfx_pixel( WHITE, x, 2*y );
+                //cputcxy( x, y, SPRITE_ALIVE );
             }
             cell_curr               += NB_LINES;
             cell_neighbourhoud_line += NB_LINES;
