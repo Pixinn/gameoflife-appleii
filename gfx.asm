@@ -157,7 +157,7 @@ fill_line:
         CPY #40            ;nb pixels per line
         BNE fill_line
         INX
-        CPX #24            ;nb lines
+        CPX #20            ;nb lines
         BNE for_lines
 fill_end:
         ;displaying the page we filled
@@ -182,6 +182,8 @@ _gfx_pixel:
         jsr pusha
         LDA tmp2
         jsr pusha
+        ;LDA tmp1
+        ;jsr pusha
         LDA ptr1
         jsr pusha
         LDA ptr2
@@ -193,6 +195,8 @@ _gfx_pixel:
         AND #1
         BEQ even
 odd:      ; pixel is on an odd line
+          LDA #$0F    ;To or with the other nybble when writting the pixel
+          STA tmp1
           LDY #(1+4)  ;there were 4 pushes to save registers
           LDA (sp),Y  ;color
           ASL         ;shift the color to put it on high nybble
@@ -202,6 +206,8 @@ odd:      ; pixel is on an odd line
           CLC
           BCC oddeven
 even:     ; pixel is on an even line
+          LDA #$F0    ;To or with the other nybble when writting the pixel
+          STA tmp1
           LDY #(1+4)  ;there were 4 pushes to save registers
           LDA (sp),Y  ;color
 oddeven:
@@ -231,7 +237,9 @@ oddeven:
         LDA (sp),Y
         ; draw
         TAY
-        LDA tmp2  ;color
+        LDA (ptr2),Y  ;a color may have been present on the other nybble
+        AND tmp1      ;clearing the pixel's nybble
+        ORA tmp2      ;adding the color to the pixel's nyyble
         STA (ptr2),Y
 
         ;restoring the context
@@ -239,6 +247,8 @@ oddeven:
         STA ptr2
         JSR popa
         STA ptr1
+        ;JSR popa
+        ;STA tmp1
         JSR popa
         STA tmp2
         JSR popa

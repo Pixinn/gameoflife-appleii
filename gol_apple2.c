@@ -16,7 +16,7 @@ void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Init
 void init_display( void );              /* Inits displayed playfield */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
-uint8_t toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
+void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
 
 void run( void );                           /* runs the simulation */
@@ -29,7 +29,7 @@ void quit( void );
 
 /******************* CUSTOM TYPES AND VALUES DEFINITIONS ****************/
 
-#define NB_LINES    23u
+#define NB_LINES    40u
 #define NB_COLUMNS  40u
 
 #define ALIVE       1u
@@ -61,12 +61,6 @@ int main( int argc, char** argv )
     (void)argc;
     (void)argv;
 
-    //+ DEBUG
-    //gotoxy(0,0);
-    //printf("Cells:0x%x - Cells_future:0x%x",(uint16_t)(&Cells[0][0]),(uint16_t)(&Cells_Future[0][0]));
-    //cgetc();
-    //- DEBUG
-
     init_asm( (uint8_t*)Cells, (uint8_t*)Cells_Future );
 
     /* Running the state machine */
@@ -79,7 +73,6 @@ int main( int argc, char** argv )
                 State = STATE_EDITOR;
                 break;
             case STATE_EDITOR:
-                mode_text();
                 editor();
                 State = STATE_RUN;
                 break;
@@ -120,15 +113,22 @@ void quit( void )
 
 void init_display( void )
 {
-    clrscr();
-    chlinexy (1u, 0u, NB_COLUMNS-2u );
-    chlinexy (1u, NB_LINES-1u, NB_COLUMNS-2u );
-    cvlinexy (0u, 1u, NB_LINES-1u );
-    cvlinexy (NB_COLUMNS-1u, 1u, NB_LINES-1u );
-    cputcxy ( 0u,  0u, '+' );
-    cputcxy ( 0u , NB_LINES-1u,'+');
-    cputcxy ( NB_COLUMNS-1u, 0u,'+');
-    cputcxy ( NB_COLUMNS-1u, NB_LINES-1u,'+');
+    register uint8_t i;
+    gfx_init( LOWRES, SPLIT );
+    gfx_fill( BLACK );
+    for( i = 0u; i < NB_COLUMNS; ++i ) {
+      gfx_pixel( WHITE, i, 0u );
+    }
+    for( i = 0u; i < NB_COLUMNS; ++i ) {
+      gfx_pixel( WHITE, i, NB_LINES-1u );
+    }
+    for( i = 0u; i < NB_LINES; ++i ) {
+      gfx_pixel( WHITE, 0u, i );
+    }
+    for( i = 0u; i < NB_LINES; ++i ) {
+      gfx_pixel( WHITE, NB_LINES-1u, i );
+    }
+    cgetc();
 }
 
 
@@ -147,6 +147,12 @@ void draw_cells( void ) {
     }
 }
 
+void clear_cursor( const uint8_t x, const uint8_t y )
+{
+  if( Cells[x][y] == DEAD ) {
+    gfx_pixel( BLACK, x, y );
+  }
+}
 
 void editor( void )
 {
@@ -157,39 +163,43 @@ void editor( void )
 
     uint8_t quit, x, y;
 
-    gotoxy( 0u, NB_LINES );
-    printf("EDITOR   (D)one");
-
     x = NB_COLUMNS >> 1u;
     y = NB_LINES >> 1u;
-    gotoxy(x,y);
 
     quit = 0;
     while ( quit == 0)
     {
-        cursor(1);
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
-                if( x > 1u ) { gotoxy( --x, y ); }
+                clear_cursor(x,y);
+                if( x > 1u ) { --x; }
           break;
         case KEY_DOWN:
-                if( y < NB_LINES-2u ) { gotoxy( x, ++y ); }
+                clear_cursor(x,y);
+                if( y < NB_LINES-2u ) { ++y; }
           break;
         case KEY_UP:
-                if( y > 1u ) { gotoxy( x, --y ); }
+                clear_cursor(x,y);
+                if( y > 1u ) { --y; }
           break;
         case KEY_RIGHT:
-                if( x < NB_COLUMNS-2u ) {	gotoxy( ++x, y ); }
+                clear_cursor(x,y);
+                if( x < NB_COLUMNS-2u ) {	++x; }
           break;
         case ' ':
-                x = toggle_cell( x, y );
+                if(    x > 1u && x < NB_COLUMNS-2u
+                    && y > 1u &&  y < NB_LINES-2u )
+                {
+                  toggle_cell( x++, y );
+                }
                 break;
         case 'd':
           quit = 1;
           break;
         }
-	}
+        gfx_pixel( WHITE, x, y ); //cursor
+    }
 
     /* Cells was updated by the calls to toggle() */
     memcpy( Cells_Future, Cells, sizeof(Cells_Future) );
@@ -197,31 +207,27 @@ void editor( void )
 }
 
 
-uint8_t toggle_cell( const uint8_t x, const uint8_t y )
+void toggle_cell( const uint8_t x, const uint8_t y )
 {
     char* cell;
-    if( x == 0u || x >= NB_COLUMNS-1u || y == 0u || y >= NB_LINES-1u ) { return x; }
+    if( x == 0u || x >= NB_COLUMNS-1u || y == 0u || y >= NB_LINES-1u ) { return; }
     cell = &Cells[x][y];
     if( *cell == DEAD ) {
         *cell = ALIVE;
-        cputc( SPRITE_ALIVE );
+        gfx_pixel( ORANGE, x, y );
     } else {
         *cell = DEAD;
-        cputc( SPRITE_DEAD );
+        gfx_pixel( BLACK, x, y );
     }
-    return wherex ();
 }
 
 
 void run( void  )
 {
-    uint8_t i;
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
 
-    gfx_init( LOWRES, SPLIT );
-    gfx_fill( BLACK );
     cursor(0);
     gotoxy( 0u, NB_LINES );
     printf("Iteration:1     (R)eset (E)ditor (Q)uit");
@@ -261,11 +267,11 @@ void __fastcall__ update( void )
             ) {
                 *cell_future_line = DEAD;
                 //cputcxy( x, y, SPRITE_DEAD );
-                gfx_pixel( BLACK, x, 2*y );
+                gfx_pixel( BLACK, x, y );
             }
             else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
-                gfx_pixel( WHITE, x, 2*y );
+                gfx_pixel( WHITE, x, y );
                 //cputcxy( x, y, SPRITE_ALIVE );
             }
             cell_curr               += NB_LINES;
