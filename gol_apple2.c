@@ -147,12 +147,6 @@ void draw_cells( void ) {
     }
 }
 
-void clear_cursor( const uint8_t x, const uint8_t y )
-{
-  if( Cells[x][y] == DEAD ) {
-    gfx_pixel( BLACK, x, y );
-  }
-}
 
 void editor( void )
 {
@@ -162,9 +156,11 @@ void editor( void )
     #define KEY_RIGHT   'l'
 
     uint8_t quit, x, y;
+    uint8_t color_pixel;
 
     x = NB_COLUMNS >> 1u;
-    y = NB_LINES >> 1u;
+    y = (NB_LINES >> 1u) + 1;
+    color_pixel = gfx_get_pixel( x, y );
 
     quit = 0;
     while ( quit == 0)
@@ -172,19 +168,19 @@ void editor( void )
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
-                clear_cursor(x,y);
+                gfx_pixel( color_pixel, x, y );
                 if( x > 1u ) { --x; }
           break;
         case KEY_DOWN:
-                clear_cursor(x,y);
+                gfx_pixel( color_pixel, x, y );
                 if( y < NB_LINES-2u ) { ++y; }
           break;
         case KEY_UP:
-                clear_cursor(x,y);
+                gfx_pixel( color_pixel, x, y );
                 if( y > 1u ) { --y; }
           break;
         case KEY_RIGHT:
-                clear_cursor(x,y);
+                gfx_pixel( color_pixel, x, y );
                 if( x < NB_COLUMNS-2u ) {	++x; }
           break;
         case ' ':
@@ -198,6 +194,7 @@ void editor( void )
           quit = 1;
           break;
         }
+        color_pixel = gfx_get_pixel( x, y );
         gfx_pixel( WHITE, x, y ); //cursor
     }
 
@@ -228,16 +225,16 @@ void run( void  )
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
 
-    cursor(0);
-    gotoxy( 0u, NB_LINES );
-    printf("Iteration:1     (R)eset (E)ditor (Q)uit");
+    //cursor(0);
+    //gotoxy( 0u, NB_LINES );
+    //printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
         update( );
         /* Printing iterations */
-        gotoxy(10u, NB_LINES);
-        printf( itoa(nb_iterations++, str_nb_iteration, 10) );
+        //gotoxy(10u, NB_LINES);
+        //printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ) {
             KeyPressed = cgetc();

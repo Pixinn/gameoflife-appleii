@@ -8,6 +8,7 @@
   .export         _gfx_init
   .export         _gfx_fill
   .export         _gfx_pixel
+  .export         _gfx_get_pixel
   .export         _gfx_refresh
 
 
@@ -101,7 +102,6 @@ init_end:
 ;**************************
 ;void __fastcall__ gfx_fill( uint8_t color )
 ; Fills the screen with the given color
-; TMP1 and PTR1 and PTR2 are overwritten
 _gfx_fill:
 ; TODO SWITCH PAGES !!
         ;saving the context
@@ -255,6 +255,65 @@ oddeven:
         STA tmp3
         JSR popa  ;the 2 parameters on stack
         JSR popa
+        RTS
+
+
+;**************************
+;uint8_t __fastcall__ gfx_get_pixel( uint8_t coord_x, uint8_t coord_y )
+; Returns the pixel's color
+_gfx_get_pixel:
+        TAX         ; coord_y
+
+        ;saving the context
+        LDA ptr1
+        JSR pusha
+        LDA ptr2
+        JSR pusha
+
+        ; Page's address to ptr1
+        LDA #<Page1
+        STA ptr1
+        LDA #>Page1
+        STA ptr1+1
+        ; Line's adress to ptr2
+        TXA
+        LSR
+        ASL
+        TAY
+        LDA (ptr1),Y
+        STA ptr2
+        INY
+        LDA (ptr1),Y
+        STA ptr2+1
+        ; get coord_x
+        LDY #2      ;there were 4 pushes to save registers
+        LDA (sp),Y
+        TAY
+        TXA
+        AND #1  ; test line parity to read the correct nybble
+        BEQ even_2
+odd_2:    LDA (ptr2),Y
+          LSR  ; color is in lo nybble
+          LSR
+          LSR
+          LSR
+          CLC
+          BCC end_2
+even_2:   LDA (ptr2),Y
+          AND #$0F  ; color is in hi nybble
+end_2:  TAX
+
+        ;restoring the context
+        JSR popa
+        STA ptr2
+        JSR popa
+        STA ptr1
+        JSR popa  ;1st parameter
+
+        ; return value
+        TXA
+        LDX #0
+
         RTS
 
 
