@@ -46,6 +46,9 @@ uint8_t State = STATE_INIT;
 #define NO_KEY     '\0'
 char KeyPressed = NO_KEY;
 
+#define CURSOR_COLOR    YELLOW
+#define BORDER_COLOR    WHITE
+
 
 /******************* STATIC GLOBAL VARIABLES ******************/
 
@@ -117,16 +120,16 @@ void init_display( void )
     gfx_init( LOWRES, SPLIT );
     gfx_fill( BLACK );
     for( i = 0u; i < NB_COLUMNS; ++i ) {
-      gfx_pixel( WHITE, i, 0u );
+      gfx_pixel( BORDER_COLOR, i, 0u );
     }
     for( i = 0u; i < NB_COLUMNS; ++i ) {
-      gfx_pixel( WHITE, i, NB_LINES-1u );
+      gfx_pixel( BORDER_COLOR, i, NB_LINES-1u );
     }
     for( i = 0u; i < NB_LINES; ++i ) {
-      gfx_pixel( WHITE, 0u, i );
+      gfx_pixel( BORDER_COLOR, 0u, i );
     }
     for( i = 0u; i < NB_LINES; ++i ) {
-      gfx_pixel( WHITE, NB_LINES-1u, i );
+      gfx_pixel( BORDER_COLOR, NB_LINES-1u, i );
     }
     cgetc();
 }
@@ -155,52 +158,55 @@ void editor( void )
     #define KEY_UP      'i'
     #define KEY_RIGHT   'l'
 
-    uint8_t quit, x, y;
+    uint8_t quit, x_cursor, y_cursor;
     uint8_t color_pixel;
 
-    x = NB_COLUMNS >> 1u;
-    y = (NB_LINES >> 1u) + 1;
-    color_pixel = gfx_get_pixel( x, y );
+    //Place the cursor middle screen
+    x_cursor = NB_COLUMNS >> 1u;
+    y_cursor = NB_LINES >> 1u;
 
     quit = 0;
     while ( quit == 0)
     {
+        color_pixel = gfx_get_pixel( x_cursor, y_cursor );
+        gfx_pixel( CURSOR_COLOR, x_cursor, y_cursor ); //cursor
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
-                gfx_pixel( color_pixel, x, y );
-                if( x > 1u ) { --x; }
+                gfx_pixel( color_pixel, x_cursor, y_cursor );
+                if( x_cursor > 1u ) { --x_cursor; }
           break;
         case KEY_DOWN:
-                gfx_pixel( color_pixel, x, y );
-                if( y < NB_LINES-2u ) { ++y; }
+                gfx_pixel( color_pixel, x_cursor, y_cursor );
+                if( y_cursor < NB_LINES-2u ) { ++y_cursor; }
           break;
         case KEY_UP:
-                gfx_pixel( color_pixel, x, y );
-                if( y > 1u ) { --y; }
+                gfx_pixel( color_pixel, x_cursor, y_cursor );
+                if( y_cursor > 1u ) { --y_cursor; }
           break;
         case KEY_RIGHT:
-                gfx_pixel( color_pixel, x, y );
-                if( x < NB_COLUMNS-2u ) {	++x; }
+                gfx_pixel( color_pixel, x_cursor, y_cursor );
+                if( x_cursor < NB_COLUMNS-2u ) {	++x_cursor; }
           break;
         case ' ':
-                if(    x > 1u && x < NB_COLUMNS-2u
-                    && y > 1u &&  y < NB_LINES-2u )
+                if(    x_cursor > 0u && x_cursor < NB_COLUMNS-1u
+                    && y_cursor > 0u &&  y_cursor < NB_LINES-1u )
                 {
-                  toggle_cell( x++, y );
+                  toggle_cell( x_cursor++, y_cursor );
                 }
                 break;
         case 'd':
           quit = 1;
+          gfx_pixel( color_pixel, x_cursor, y_cursor ); //clear cursor
           break;
         }
-        color_pixel = gfx_get_pixel( x, y );
-        gfx_pixel( WHITE, x, y ); //cursor
     }
 
     /* Cells was updated by the calls to toggle() */
     memcpy( Cells_Future, Cells, sizeof(Cells_Future) );
     memcpy( Cells_Initial, Cells, sizeof(Cells_Initial) );
+
+
 }
 
 
@@ -225,16 +231,10 @@ void run( void  )
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
 
-    //cursor(0);
-    //gotoxy( 0u, NB_LINES );
-    //printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
         update( );
-        /* Printing iterations */
-        //gotoxy(10u, NB_LINES);
-        //printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ) {
             KeyPressed = cgetc();
@@ -252,7 +252,6 @@ void __fastcall__ update( void )
     uint8_t* cell_future = (uint8_t*)Cells_Future + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
     for( y = 1u; y < NB_LINES - 1u; ++y )
     {
-
         uint8_t* cell_curr = cell_line;
         uint8_t* cell_neighbourhoud_line = cell_neighbourhoud;
         uint8_t* cell_future_line = cell_future;
@@ -263,13 +262,11 @@ void __fastcall__ update( void )
                 (nb_neighbours < 2u || nb_neighbours > 3u )
             ) {
                 *cell_future_line = DEAD;
-                //cputcxy( x, y, SPRITE_DEAD );
                 gfx_pixel( BLACK, x, y );
             }
             else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
                 gfx_pixel( WHITE, x, y );
-                //cputcxy( x, y, SPRITE_ALIVE );
             }
             cell_curr               += NB_LINES;
             cell_neighbourhoud_line += NB_LINES;
