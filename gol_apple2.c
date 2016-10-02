@@ -46,8 +46,9 @@ uint8_t State = STATE_INIT;
 #define NO_KEY     '\0'
 char KeyPressed = NO_KEY;
 
-#define CURSOR_COLOR    YELLOW
+#define CURSOR_COLOR    WHITE
 #define BORDER_COLOR    WHITE
+#define CELL_COLOR      ORANGE
 
 
 /******************* STATIC GLOBAL VARIABLES ******************/
@@ -142,9 +143,9 @@ void draw_cells( void ) {
         for( y = 1u; y < NB_LINES - 1u; ++y )
         {
             if( Cells[x][y] == ALIVE ) {
-                cputcxy ( x, y, SPRITE_ALIVE );
+                gfx_pixel ( CELL_COLOR, x, y );
             } else {
-                cputcxy ( x, y, SPRITE_DEAD );
+                gfx_pixel ( BLACK, x, y );
             }
         }
     }
@@ -217,7 +218,7 @@ void toggle_cell( const uint8_t x, const uint8_t y )
     cell = &Cells[x][y];
     if( *cell == DEAD ) {
         *cell = ALIVE;
-        gfx_pixel( ORANGE, x, y );
+        gfx_pixel( CELL_COLOR, x, y );
     } else {
         *cell = DEAD;
         gfx_pixel( BLACK, x, y );
@@ -230,11 +231,14 @@ void run( void  )
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
-
+    gotoxy( 0u, 23 );
+    printf("Iteration:1     (R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
         update( );
+        gotoxy(10u, 23);
+        printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ) {
             KeyPressed = cgetc();
@@ -266,7 +270,7 @@ void __fastcall__ update( void )
             }
             else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
-                gfx_pixel( WHITE, x, y );
+                gfx_pixel( CELL_COLOR, x, y );
             }
             cell_curr               += NB_LINES;
             cell_neighbourhoud_line += NB_LINES;

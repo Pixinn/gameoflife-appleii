@@ -2,6 +2,7 @@
     .include        "apple2.inc"
     .include        "zeropage.inc"
 
+    .import         popa
 
     .export _init_asm
     .export _count_neighbours
@@ -9,7 +10,7 @@
 
 
 
-    .define NB_LINES    23
+    .define NB_LINES    40
     .define NB_COLUMNS  40
     .define JUMP_BEGINNING_NEXT_LINE    NB_LINES - 2
 
@@ -64,14 +65,13 @@ cell := ptr4
     ADC (cell),Y
 
     ;return
-    TAX
     LDX #0
     RTS
 
-    
-    
-    
-    
+
+
+
+
 ;*************************    WORK IN PROGRESS **************************
 
 
@@ -116,13 +116,17 @@ cell_future:          .word   $0
 
 _init_asm:
 
-  STA Cells
-  STX Cells+1
-  ;FIXME : clearly Cells_Future IS NOT in sreg!!!
-  LDA sreg
   STA Cells_Future
-  LDA sreg+1
   STX Cells_Future+1
+  LDY #1
+  LDA (sp),Y
+  STA Cells+1
+  DEY
+  LDA (sp),Y
+  STA Cells
+
+  JSR popa
+  JSR popa
 
   RTS
 
