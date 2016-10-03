@@ -8,6 +8,7 @@
 #include <conio.h>
 
 #include "gfx.h"
+#include "rnd_colors.h"
 
 /******************* FUNCTION DEFINITIONS **************/
 
@@ -65,7 +66,11 @@ int main( int argc, char** argv )
     (void)argc;
     (void)argv;
 
+    printf("PAUSE");
+    cgetc();
+
     init_asm( (uint8_t*)Cells, (uint8_t*)Cells_Future );
+    init_rnd_color();
 
     /* Running the state machine */
     while( State != STATE_QUIT )
@@ -118,6 +123,7 @@ void quit( void )
 void init_display( void )
 {
     register uint8_t i;
+    clrscr();
     gfx_init( LOWRES, SPLIT );
     gfx_fill( BLACK );
     for( i = 0u; i < NB_COLUMNS; ++i ) {

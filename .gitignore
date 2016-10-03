@@ -3,4 +3,5 @@
 *.o
 *.map
 *.dsk
+*.bak
 gol

@@ -3,3 +3,4 @@ Time to 50 iterations
 50ef808 : 111:94 
 555db95 :  38:51
 d0f9aef :  15:43
+9687b85 :  27:27

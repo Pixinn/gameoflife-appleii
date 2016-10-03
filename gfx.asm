@@ -107,11 +107,11 @@ _gfx_fill:
         ;saving the context
         TAX
         LDA tmp1
-        jsr pusha
+        JSR pusha
         LDA ptr1
-        jsr pusha
+        JSR pusha
         LDA ptr2
-        jsr pusha
+        JSR pusha
         TXA
         ;duplicate nybble color
         STA tmp1
@@ -163,11 +163,11 @@ fill_end:
         ;displaying the page we filled
         ; TODO SWITCH PAGES !!
         ;restoring the context
-        jsr popa
+        JSR popa
         STA ptr2
-        jsr popa
+        JSR popa
         STA ptr1
-        jsr popa
+        JSR popa
         STA tmp1
         RTS
 
@@ -179,15 +179,15 @@ _gfx_pixel:
         ;saving the context
         TAX
         LDA tmp3
-        jsr pusha
+        JSR pusha
         LDA tmp2
-        jsr pusha
+        JSR pusha
         ;LDA tmp1
-        ;jsr pusha
+        ;JSR pusha
         LDA ptr1
-        jsr pusha
+        JSR pusha
         LDA ptr2
-        jsr pusha
+        JSR pusha
         TXA
 
         STA tmp3    ;coord_y
