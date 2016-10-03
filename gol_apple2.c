@@ -54,9 +54,9 @@ char KeyPressed = NO_KEY;
 
 /******************* STATIC GLOBAL VARIABLES ******************/
 
-uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
-uint8_t Cells_Future[ NB_COLUMNS ][ NB_LINES ];
-uint8_t Cells_Initial[ NB_COLUMNS ][ NB_LINES ];
+static uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
+static uint8_t Cells_Future[ NB_COLUMNS ][ NB_LINES ];
+static uint8_t Cells_Initial[ NB_COLUMNS ][ NB_LINES ];
 
 /******************** CODE ************************/
 
@@ -65,9 +65,6 @@ int main( int argc, char** argv )
 {
     (void)argc;
     (void)argv;
-
-    printf("PAUSE");
-    cgetc();
 
     init_asm( (uint8_t*)Cells, (uint8_t*)Cells_Future );
     init_rnd_color();
@@ -114,8 +111,8 @@ void quit( void )
     uint8_t x, y;
     mode_text();
     screensize (&x, &y);
-    gotoxy( 1u, y-1u );
-    printf("BYE BYE!");
+    clrscr();
+    printf("\n*** THIS WAS LIFE BY WWW.XTOF.INFO ***\n\n");
     exit(0);
 }
 
@@ -224,7 +221,7 @@ void toggle_cell( const uint8_t x, const uint8_t y )
     cell = &Cells[x][y];
     if( *cell == DEAD ) {
         *cell = ALIVE;
-        gfx_pixel( CELL_COLOR, x, y );
+        gfx_pixel( get_color(), x, y );
     } else {
         *cell = DEAD;
         gfx_pixel( BLACK, x, y );
@@ -276,7 +273,7 @@ void __fastcall__ update( void )
             }
             else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
                 *cell_future_line = ALIVE;
-                gfx_pixel( CELL_COLOR, x, y );
+                gfx_pixel( get_color(), x, y );
             }
             cell_curr               += NB_LINES;
             cell_neighbourhoud_line += NB_LINES;

@@ -6,14 +6,16 @@
   .import         popa
 
   .export _init_rnd_color
+  .export _get_color
 
 
 .BSS
-Colors:   .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-          .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-          .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-          .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+Colors: .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+         .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+         .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+         .dword  $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
 
+Color:   .byte $0
 
 .CODE
 
@@ -53,3 +55,15 @@ loop_end:
       JSR popa
       STA tmp1
       RTS
+
+
+
+; uint8_t __fastcall__  get_color( void )
+; Gets the next color from the buffer
+_get_color:
+        LDX Color
+        LDA Colors,X
+        INX
+        STX Color
+        LDX #0
+        RTS
