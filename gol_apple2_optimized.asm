@@ -12,7 +12,7 @@
 
     .export _init_asm
     .export _count_neighbours
-    .export _update_wip
+    .export _update
 
 
     .define NB_LINES    40
@@ -22,67 +22,6 @@
     .define DEAD  0
     .define BLACK 0
     .define CELLS_SIZE 1600
-
-
-; ******************
-;uint8_t __fastcall__ count_neighbours( uint8_t* cell )
-;param: cell is in AX
-; ! A, X, Y & PTR4 ARE OVERWRITTEN !
-_count_neighbours:
-
-    ;ASSUMPTIONS:
-    ; -> A and Y (offset to starting ptr) won't overflow!
-
-    ;alias
-cell := ptr4
-    ;init
-    STA cell
-    STX cell+1
-    LDA #0
-    LDY #0
-    CLC
-
-    ;acc 1st row
-    ADC (cell),Y
-    INY
-    ADC (cell),Y
-    INY
-    ADC (cell),Y
-
-    ;next row
-    STA tmp4
-    TYA
-    ADC #JUMP_BEGINNING_NEXT_LINE
-    TAY
-    LDA tmp4
-    ADC (cell),Y
-    INY
-    INY
-    ADC (cell),Y
-
-    ;next row
-    STA tmp4
-    TYA
-    ADC #JUMP_BEGINNING_NEXT_LINE
-    TAY
-    LDA tmp4
-    ADC (cell),Y
-    INY
-    ADC (cell),Y
-    INY
-    ADC (cell),Y
-
-    ;return
-    LDX #0
-    RTS
-
-
-
-
-
-;*************************    WORK IN PROGRESS **************************
-
-
 
     .BSS
 
@@ -95,6 +34,8 @@ cell_future:          .word   $0
 
 
     .CODE
+
+
 
 ;16 bit addition of the content of an adress with a 16bit value
 .macro    add_16  addr_dst, addr_src, value_low, value_hi
@@ -141,7 +82,7 @@ _init_asm:
 ; ******************
 ;void __fastcall__ update( void )
 ; !  A, X, Y & ALL PTRx ARE OVERWRITTEN !
-_update_wip:
+_update:
 
     ;aliases
 cell_curr               := ptr1
@@ -284,3 +225,56 @@ end_update:
     RTS
 
 ;*************** END OF UPDATE **************
+
+
+; ******************
+;uint8_t __fastcall__ count_neighbours( uint8_t* cell )
+;param: cell is in AX
+; ! A, X, Y & PTR4 ARE OVERWRITTEN !
+_count_neighbours:
+
+    ;ASSUMPTIONS:
+    ; -> A and Y (offset to starting ptr) won't overflow!
+
+    ;alias
+cell := ptr4
+    ;init
+    STA cell
+    STX cell+1
+    LDA #0
+    LDY #0
+    CLC
+
+    ;acc 1st row
+    ADC (cell),Y
+    INY
+    ADC (cell),Y
+    INY
+    ADC (cell),Y
+
+    ;next row
+    STA tmp4
+    TYA
+    ADC #JUMP_BEGINNING_NEXT_LINE
+    TAY
+    LDA tmp4
+    ADC (cell),Y
+    INY
+    INY
+    ADC (cell),Y
+
+    ;next row
+    STA tmp4
+    TYA
+    ADC #JUMP_BEGINNING_NEXT_LINE
+    TAY
+    LDA tmp4
+    ADC (cell),Y
+    INY
+    ADC (cell),Y
+    INY
+    ADC (cell),Y
+
+    ;return
+    LDX #0
+    RTS

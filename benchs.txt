@@ -4,3 +4,4 @@ Time to 50 iterations
 555db95 :  38:51
 d0f9aef :  15:43
 9687b85 :  27:27
+3e796df :  10:42

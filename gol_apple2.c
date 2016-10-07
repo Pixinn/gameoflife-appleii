@@ -22,7 +22,6 @@ void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the
 
 void run( void );                           /* runs the simulation */
 void __fastcall__ update( void );      /* updates the simulation */
-void __fastcall__ update_wip( void );  /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
 
 
@@ -240,7 +239,7 @@ void run( void  )
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
-        update_wip( );
+        update( );
         gotoxy(10u, PRINTF_LINE);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
@@ -249,40 +248,4 @@ void run( void  )
             break;
         }
     }
-}
-
-
-void __fastcall__ update( void )
-{
-    uint8_t x, y;
-    uint8_t* cell_neighbourhoud = (uint8_t*)Cells;         // cell_neighbourhoud = &Cells[0][0];
-    uint8_t* cell_line = cell_neighbourhoud + NB_LINES + 1u; // cell_line = &Cells[1][1];
-    uint8_t* cell_future = (uint8_t*)Cells_Future + NB_LINES + 1u; // cell_future = &Cells_Future[1][1];
-    for( y = 1u; y < NB_LINES - 1u; ++y )
-    {
-        uint8_t* cell_curr = cell_line;
-        uint8_t* cell_neighbourhoud_line = cell_neighbourhoud;
-        uint8_t* cell_future_line = cell_future;
-        for(  x = 1u; x < NB_COLUMNS - 1u; ++x)
-        {
-            uint8_t nb_neighbours = count_neighbours( cell_neighbourhoud_line );
-            if( *cell_curr == ALIVE && \
-                (nb_neighbours < 2u || nb_neighbours > 3u )
-            ) {
-                *cell_future_line = DEAD;
-                gfx_pixel( BLACK, x, y );
-            }
-            else if( *cell_curr == DEAD && nb_neighbours == 3u ) {
-                *cell_future_line = ALIVE;
-                gfx_pixel( get_color(), x, y );
-            }
-            cell_curr               += NB_LINES;
-            cell_neighbourhoud_line += NB_LINES;
-            cell_future_line        += NB_LINES;
-        }
-        ++cell_line;
-        ++cell_neighbourhoud;
-        ++cell_future;
-    }
-    memcpy( Cells, Cells_Future, sizeof(Cells) );
 }
