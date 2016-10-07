@@ -3,6 +3,8 @@
 
   .import         pusha
   .import         popa
+  .import         pushax
+  .import         popax
 
   .export         _mode_text
   .export         _gfx_init
@@ -103,8 +105,9 @@ init_end:
 ;void __fastcall__ gfx_fill( uint8_t color )
 ; Fills the screen with the given color
 _gfx_fill:
-; TODO SWITCH PAGES !!
+        ; TODO SWITCH PAGES !!
         ;saving the context
+        ;WARNING context us not saved properly: ptr+1 not saved!
         TAX
         LDA tmp1
         JSR pusha
@@ -176,28 +179,32 @@ fill_end:
 ;void __fastcall__ gfx_pixel( uint8_t color, uint8_t coord_x, uint8_t coord_y )
 ; Draws a pixel at the given coordinates on the Page_Future
 _gfx_pixel:
+        ;aliases
+        coord_y := tmp3
         ;saving the context
-        TAX
+        PHA
         LDA tmp3
         JSR pusha
         LDA tmp2
         JSR pusha
-        ;LDA tmp1
-        ;JSR pusha
+        LDA tmp1
+        JSR pusha
         LDA ptr1
-        JSR pusha
+        LDX ptr1+1
+        JSR pushax
         LDA ptr2
-        JSR pusha
-        TXA
+        LDX ptr2+1
+        JSR pushax
+        PLA
 
-        STA tmp3    ;coord_y
+        STA coord_y    ;coord_y
         ; Modify the color depending on the pixel's line parity
         AND #1
         BEQ even
 odd:      ; pixel is on an odd line
           LDA #$0F    ;To or with the other nybble when writting the pixel
           STA tmp1
-          LDY #(1+4)  ;there were 4 pushes to save registers
+          LDY #(1+7)  ;there were 7 pushes to save registers
           LDA (sp),Y  ;color
           ASL         ;shift the color to put it on high nybble
           ASL
@@ -208,7 +215,7 @@ odd:      ; pixel is on an odd line
 even:     ; pixel is on an even line
           LDA #$F0    ;To or with the other nybble when writting the pixel
           STA tmp1
-          LDY #(1+4)  ;there were 4 pushes to save registers
+          LDY #(1+7)  ;there were 7 pushes to save registers
           LDA (sp),Y  ;color
 oddeven:
         STA tmp2
@@ -222,7 +229,7 @@ oddeven:
         STA ptr1+1
 
         ; get the line adress and store it in ptr2
-        LDA tmp3
+        LDA coord_y
         LSR
         ASL
         TAY
@@ -233,7 +240,7 @@ oddeven:
         STA ptr2+1
 
         ; get coord_x
-        LDY #4      ;there were 4 pushes to save registers
+        LDY #7      ;there were 4 pushes to save registers
         LDA (sp),Y
         ; draw
         TAY
@@ -243,12 +250,14 @@ oddeven:
         STA (ptr2),Y
 
         ;restoring the context
-        JSR popa
+        JSR popax
         STA ptr2
-        JSR popa
+        STX ptr2+1
+        JSR popax
         STA ptr1
-        ;JSR popa
-        ;STA tmp1
+        STX ptr1+1
+        JSR popa
+        STA tmp1
         JSR popa
         STA tmp2
         JSR popa

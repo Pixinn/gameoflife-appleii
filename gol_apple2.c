@@ -22,7 +22,7 @@ void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the
 
 void run( void );                           /* runs the simulation */
 void __fastcall__ update( void );      /* updates the simulation */
-void __fastcall__ update_asm( void );  /* updates the simulation */
+void __fastcall__ update_wip( void );  /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
 
 
@@ -231,16 +231,17 @@ void toggle_cell( const uint8_t x, const uint8_t y )
 
 void run( void  )
 {
+    #define PRINTF_LINE 21u
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
-    gotoxy( 0u, 23 );
-    printf("Iteration:1     (R)eset (E)ditor (Q)uit");
+    gotoxy( 0u, PRINTF_LINE );
+    printf("Iteration:1\n\n(R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
-        update( );
-        gotoxy(10u, 23);
+        update_wip( );
+        gotoxy(10u, PRINTF_LINE);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ) {
