@@ -10,7 +10,7 @@ APPLE2_MAP  := gol_apple2.map
 APPLE2_CFLAGS	:= -Oirs -v -t apple2
 APPLE2_OUT	:= gol.a2
 
-all:	apple2
+all:	linux apple2
 
 linux:	$(LINUX_SRC)
 	$(LINUX_CC) -o $(LINUX_OUT) $? $(LINUX_CFLAGS)
