@@ -32,6 +32,7 @@
 void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Inits the variables used in the ASM scope */
 
 void init_display( void );              /* Inits displayed playfield */
+void clear_text( void );                /* Clears the 4 line text field in splitted mode */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
@@ -68,6 +69,9 @@ char KeyPressed = NO_KEY;
 #define CELL_COLOR      ORANGE
 
 
+#define PRINTF_LINE 20u
+
+
 /******************* STATIC GLOBAL VARIABLES ******************/
 
 static uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
@@ -95,10 +99,12 @@ int main( int argc, char** argv )
                 State = STATE_EDITOR;
                 break;
             case STATE_EDITOR:
+                clear_text();
                 editor();
                 State = STATE_RUN;
                 break;
             case STATE_RUN:
+                clear_text();
                 run();
                 if( KeyPressed == 'e' ) { /* Go back to editor */
                     State = STATE_EDITOR;
@@ -133,6 +139,16 @@ void quit( void )
 }
 
 
+void clear_text( void )
+{
+    register uint8_t i;
+    gotoxy( 0u, PRINTF_LINE );
+    for( i = 0; i < 4u; ++i ) {
+        printf("                                       "); /* clears a line */
+    }
+}
+
+
 void init_display( void )
 {
     register uint8_t i;
@@ -151,7 +167,6 @@ void init_display( void )
     for( i = 0u; i < NB_LINES; ++i ) {
       gfx_pixel( BORDER_COLOR, NB_LINES-1u, i );
     }
-    cgetc();
 }
 
 
@@ -180,6 +195,9 @@ void editor( void )
 
     uint8_t quit, x_cursor, y_cursor;
     uint8_t color_pixel;
+    
+    gotoxy( 0u, PRINTF_LINE );
+    printf("J L I K:Move the cursor\nSPACE: Toggle a cell\n\n(D)one");
 
     //Place the cursor middle screen
     x_cursor = NB_COLUMNS >> 1u;
@@ -246,18 +264,17 @@ void toggle_cell( const uint8_t x, const uint8_t y )
 
 
 void run( void  )
-{
-    #define PRINTF_LINE 21u
+{    
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
-    gotoxy( 0u, PRINTF_LINE );
+    gotoxy( 0u, PRINTF_LINE+1 );
     printf("Iteration:1\n\n(R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
         update( );
-        gotoxy(10u, PRINTF_LINE);
+        gotoxy(10u, PRINTF_LINE+1);
         printf( itoa(nb_iterations++, str_nb_iteration, 10) );
         /* Testing key pressed */
         if( kbhit() ) {
