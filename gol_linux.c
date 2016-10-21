@@ -1,4 +1,4 @@
-/* Conway's Game of Life for Apple II
+/* A Conway's Game of Life
 * Copyright (C) 2016 Christophe Meneboeuf <christophe@xtof.info>
 *
 * This program is free software: you can redistribute it and/or modify
