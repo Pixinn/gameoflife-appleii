@@ -33,8 +33,11 @@ void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Init
 
 void init_display( void );              /* Inits displayed playfield */
 void clear_text( void );                /* Clears the 4 line text field in splitted mode */
+void set_text( const char* const text );/* Prints a custom text into the 4 line text field in splitted mode */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
+void editor_load( void );               /* Loads a previously saved state into the editor */
+void editor_save( void );               /* Saves the current editor's state */
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
 
@@ -99,7 +102,6 @@ int main( int argc, char** argv )
                 State = STATE_EDITOR;
                 break;
             case STATE_EDITOR:
-                clear_text();
                 editor();
                 State = STATE_RUN;
                 break;
@@ -148,6 +150,13 @@ void clear_text( void )
     }
 }
 
+void set_text( const char* const text )
+{
+  clear_text();
+  gotoxy( 0u, PRINTF_LINE );
+  printf( text );
+}
+
 
 void init_display( void )
 {
@@ -188,16 +197,16 @@ void draw_cells( void ) {
 
 void editor( void )
 {
-    #define KEY_LEFT    'j'
-    #define KEY_DOWN    'k'
-    #define KEY_UP      'i'
-    #define KEY_RIGHT   'l'
+    #define KEY_LEFT    'h'
+    #define KEY_DOWN    'j'
+    #define KEY_UP      'u'
+    #define KEY_RIGHT   'k'
 
     uint8_t quit, x_cursor, y_cursor;
     uint8_t color_pixel;
-    
-    gotoxy( 0u, PRINTF_LINE );
-    printf("J L I K:Move the cursor\nSPACE: Toggle a cell\n\n(D)one");
+
+    const char* const text = "J L I K: Move the cursor\nSPACE  : Toggle a cell\n\n(L)oad - (S)ave - (D)one";
+    set_text( text );
 
     //Place the cursor middle screen
     x_cursor = NB_COLUMNS >> 1u;
@@ -233,10 +242,21 @@ void editor( void )
                   toggle_cell( x_cursor++, y_cursor );
                 }
                 break;
+        case 'l':
+          editor_save();
+          set_text( text );
+          gfx_pixel( color_pixel, x_cursor, y_cursor );
+          break;
+        case 's':
+          editor_save();
+          set_text( text );
+          gfx_pixel( color_pixel, x_cursor, y_cursor );
+          break;
         case 'd':
           quit = 1;
           gfx_pixel( color_pixel, x_cursor, y_cursor ); //clear cursor
           break;
+        default: break;
         }
     }
 
@@ -246,6 +266,30 @@ void editor( void )
 
 
 }
+
+
+void editor_load( void )
+{
+  #define ESC 0x1B
+  char num;
+  do {
+    set_text( "Enter the number to be loaded [0-9]\nOr press escape to cancel.\n" );
+    num = cgetc();
+  } while( num != ESC && (num < 0x30 || num > 0x39) );
+}
+
+
+
+void editor_save( void )
+{
+  #define ESC 0x1B
+  char num;
+  do {
+    set_text( "Enter the number to be saved [0-9]\nOr press escape to cancel.\n" );
+    num = cgetc();
+  } while( num != ESC && (num < 0x30 || num > 0x39) );
+}
+
 
 
 void toggle_cell( const uint8_t x, const uint8_t y )
@@ -264,7 +308,7 @@ void toggle_cell( const uint8_t x, const uint8_t y )
 
 
 void run( void  )
-{    
+{
     char str_nb_iteration [5];
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;

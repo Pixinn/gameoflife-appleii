@@ -79,11 +79,11 @@ void file_create( char* p_filename )
   param.param_count = 7u;
   param.pathname = filename;
   param.access = 0xE3;
-  param.file_type = 0x4;
+  param.file_type = 0x6;
   param.aux_type = 0;
   param.storage_type = 1;
-  param.create_date = (78<<8) | (04<<4) | 10;
-  param.create_time = (12<<8) | 0;
+  param.create_date = (78<<8) + (04<<4) + 10;
+  param.create_time = (12<<8) + 0;
   Error = call_to_mli( CREATE, &param );
   return;
 }
