@@ -49,7 +49,6 @@ uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* count
 void quit( void );
 
 /******************* CUSTOM TYPES AND VALUES DEFINITIONS ****************/
-
 #define NB_LINES    40u
 #define NB_COLUMNS  40u
 
@@ -204,6 +203,7 @@ void editor( void )
 
     uint8_t quit, x_cursor, y_cursor;
     uint8_t color_pixel;
+    uint8_t update_color = 1;
 
     const char* const text = "J L I K: Move the cursor\nSPACE  : Toggle a cell\n\n(L)oad - (S)ave - (D)one";
     set_text( text );
@@ -215,23 +215,27 @@ void editor( void )
     quit = 0;
     while ( quit == 0)
     {
-        color_pixel = gfx_get_pixel( x_cursor, y_cursor );
+        if (update_color) { color_pixel = gfx_get_pixel( x_cursor, y_cursor ); }
         gfx_pixel( CURSOR_COLOR, x_cursor, y_cursor ); //cursor
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
+                update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor > 1u ) { --x_cursor; }
           break;
         case KEY_DOWN:
+                update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor < NB_LINES-2u ) { ++y_cursor; }
           break;
         case KEY_UP:
+                update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor > 1u ) { --y_cursor; }
           break;
         case KEY_RIGHT:
+                update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor < NB_COLUMNS-2u ) {	++x_cursor; }
           break;
@@ -239,6 +243,7 @@ void editor( void )
                 if(    x_cursor > 0u && x_cursor < NB_COLUMNS-1u
                     && y_cursor > 0u &&  y_cursor < NB_LINES-1u )
                 {
+                  update_color = 1;
                   toggle_cell( x_cursor++, y_cursor );
                 }
                 break;
@@ -246,17 +251,22 @@ void editor( void )
           editor_save();
           set_text( text );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
+          update_color = 0;
           break;
         case 's':
           editor_save();
           set_text( text );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
+          update_color = 0;
           break;
         case 'd':
           quit = 1;
           gfx_pixel( color_pixel, x_cursor, y_cursor ); //clear cursor
+          update_color = 0;
           break;
-        default: break;
+        default:
+          update_color = 0;
+          break;
         }
     }
 
