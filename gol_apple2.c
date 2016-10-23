@@ -26,6 +26,7 @@
 /* My headers */
 #include "gfx.h"
 #include "rnd_colors.h"
+#include "file_io.h"
 
 /******************* FUNCTION DEFINITIONS **************/
 
@@ -36,8 +37,7 @@ void clear_text( void );                /* Clears the 4 line text field in split
 void set_text( const char* const text );/* Prints a custom text into the 4 line text field in splitted mode */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
-void editor_load( void );               /* Loads a previously saved state into the editor */
-void editor_save( void );               /* Saves the current editor's state */
+int8_t editor_load_save( const uint8_t load_or_save );
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
 
@@ -70,9 +70,15 @@ char KeyPressed = NO_KEY;
 #define BORDER_COLOR    WHITE
 #define CELL_COLOR      ORANGE
 
-
 #define PRINTF_LINE 20u
 
+#define SAVENAME "GOL.SAVE."
+#define SAVENAME_LENGTH 10
+
+enum {
+  LOAD,
+  SAVE
+};
 
 /******************* STATIC GLOBAL VARIABLES ******************/
 
@@ -135,7 +141,7 @@ void quit( void )
     mode_text();
     screensize (&x, &y);
     clrscr();
-    printf("\n*** THIS WAS LIFE BY WWW.XTOF.INFO ***\n\n");
+    printf("\n *** THIS WAS LIFE BY WWW.XTOF.INFO ***\n\n");
     exit(0);
 }
 
@@ -185,7 +191,7 @@ void draw_cells( void ) {
         for( y = 1u; y < NB_LINES - 1u; ++y )
         {
             if( Cells[x][y] == ALIVE ) {
-                gfx_pixel ( CELL_COLOR, x, y );
+                gfx_pixel ( get_color(), x, y );
             } else {
                 gfx_pixel ( BLACK, x, y );
             }
@@ -248,13 +254,18 @@ void editor( void )
                 }
                 break;
         case 'l':
-          editor_save();
-          set_text( text );
-          gfx_pixel( color_pixel, x_cursor, y_cursor );
           update_color = 0;
+          if( editor_load_save( LOAD ) == 0 ) {
+            draw_cells();
+            update_color = 1;
+          }
+          set_text( text );
           break;
         case 's':
-          editor_save();
+          if( editor_load_save( SAVE ) == 0) {
+            set_text( "Stage saved!\n\nPress a key to continue." );
+            cgetc();
+          }
           set_text( text );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
           update_color = 0;
@@ -277,27 +288,55 @@ void editor( void )
 
 }
 
-
-void editor_load( void )
+// A common function to load or save the content of Cells.
+// A custom string and function pointer is all that differentiate their behavior
+int8_t editor_load_save( const uint8_t load_or_save )
 {
+  // NOTE sprintf with %s does not work...
   #define ESC 0x1B
+  uint8_t handle;
+  char filename[ SAVENAME_LENGTH + 1 ];
+  char custom_text[ 80 ];
+  char str_custom[ 8 ];
   char num;
+  uint16_t nb_bytes;
+  load_or_save == LOAD ?  strcpy( str_custom, "loaded ") : \
+                          strcpy( str_custom, "saved ");
   do {
-    set_text( "Enter the number to be loaded [0-9]\nOr press escape to cancel.\n" );
+    strcpy( custom_text, "Enter the slot number to be " );
+    strcat( custom_text, str_custom );
+    strcat( custom_text,  "[0-9]\nOr press escape to cancel.\n" );
+    set_text( custom_text );
     num = cgetc();
   } while( num != ESC && (num < 0x30 || num > 0x39) );
-}
+  if( num == ESC ) { return -1; }
 
-
-
-void editor_save( void )
-{
-  #define ESC 0x1B
-  char num;
-  do {
-    set_text( "Enter the number to be saved [0-9]\nOr press escape to cancel.\n" );
-    num = cgetc();
-  } while( num != ESC && (num < 0x30 || num > 0x39) );
+  strcpy( filename, SAVENAME );
+  filename[ SAVENAME_LENGTH - 1 ] = num;
+  filename[ SAVENAME_LENGTH ] = '\0';
+  file_open( filename, &handle );
+  strcpy( custom_text, "Accessing: " );
+  strcat( custom_text, filename );
+  set_text( custom_text );
+  if( file_error() != NO_ERROR ) {
+    strcpy( custom_text, "Cannot open file to be " );
+    strcat( custom_text, str_custom );
+    set_text( custom_text );
+    cgetc();
+    file_close( handle );
+    return -1;
+  }
+  load_or_save == LOAD ?  nb_bytes =  file_read( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES ) : \
+                          nb_bytes =  file_write( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES );
+  if( file_error() != NO_ERROR || nb_bytes != NB_COLUMNS*NB_LINES ) {
+    sprintf( custom_text, "An error occured: %x\n\nPress a key to continue.", file_error() );
+    set_text( custom_text );
+    cgetc();
+    file_close( handle );
+    return -1;
+  }
+  file_close( handle );
+  return 0;
 }
 
 
