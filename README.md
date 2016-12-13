@@ -22,6 +22,13 @@ Two binaries will be produced.
 
 Run the *add-to-disk.sh* script.
 
+**Title screen**
+
+The title screen art is located in the *assets* folder. It has to be
+manually loaded on the disk image using the *AppleCommander's GUI*, for the
+command line loads a corrupted file!
+This screen was converted from a PNG using [*Rgb2Hires*](https://github.com/Pixinn/Rgb2Hires).
+
 ---
 
 For more information, you can refer to these posts on [my blog](https://www.xtof/info/blog/).

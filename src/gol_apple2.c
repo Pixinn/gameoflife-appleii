@@ -40,7 +40,7 @@ void editor( void );                    /* lets the user draw some starting cell
 int8_t editor_load_save( const uint8_t load_or_save );
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
-
+void title_screen( void );             /* Loads and display the title screen */
 void run( void );                           /* runs the simulation */
 void __fastcall__ update( void );      /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
@@ -85,6 +85,7 @@ enum {
 static uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
 static uint8_t Cells_Future[ NB_COLUMNS ][ NB_LINES ];
 static uint8_t Cells_Initial[ NB_COLUMNS ][ NB_LINES ];
+//static uint8_t Title_Screen[ 0x2000 ];
 
 /******************** CODE ************************/
 
@@ -93,6 +94,9 @@ int main( int argc, char** argv )
 {
     (void)argc;
     (void)argv;
+
+    /* Displaying the Title Screen */
+    title_screen();
 
     init_asm( (uint8_t*)Cells, (uint8_t*)Cells_Future );
     init_rnd_color();
@@ -211,7 +215,7 @@ void editor( void )
     uint8_t color_pixel;
     uint8_t update_color = 1;
 
-    const char* const text = "J L I K: Move the cursor\nSPACE  : Toggle a cell\n\n(L)oad - (S)ave - (D)one";
+    const char* const text = "H K U J: Move the cursor\nSPACE  : Toggle a cell\n\n(L)oad - (S)ave - (D)one";
     set_text( text );
 
     //Place the cursor middle screen
@@ -375,4 +379,32 @@ void run( void  )
             break;
         }
     }
+}
+
+/****** HIRES SCREEN DEFINITIONS ***********/
+#define HIRES_PAGE2     (char*)0x4000
+#define HIRES_PAGE_SIZE 0x2000
+#define SWITCH_GRAPHICS *((uint8_t*)0xC050)=1
+#define SWITCH_FULLSCREEN *((uint8_t*)0xC052)=1
+#define SWITCH_PAGE2 *((uint8_t*)0xC055)=1
+#define SWITCH_HIRES *((uint8_t*)0xC057)=1
+
+//The Title Screen asset is located in the "assets" folder
+void title_screen( void )
+{
+  uint8_t handle;
+  file_open("GOL.SCREEN", &handle);
+  if(file_read( handle, HIRES_PAGE2, HIRES_PAGE_SIZE ) != HIRES_PAGE_SIZE )  {
+    printf("\nERROR, CANNOT READ GOL.SCREEN\nERRNO: %x\n\n", file_error());
+    file_close(handle);
+    exit(-1);
+  }
+  file_close(handle);
+
+  SWITCH_GRAPHICS;
+  SWITCH_FULLSCREEN;
+  SWITCH_PAGE2;
+  SWITCH_HIRES;
+
+  cgetc();
 }

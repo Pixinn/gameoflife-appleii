@@ -19,7 +19,7 @@ linux:	$(LINUX_SRC)
 	$(LINUX_CC) -o $(LINUX_OUT) $? $(LINUX_CFLAGS)
 
 apple2: $(APPLE2_SRC)
-		$(APPLE2_CL) -m $(APPLE2_MAP) -o $(APPLE2_OUT) $? $(APPLE2_CFLAGS)
+		$(APPLE2_CL) -m $(APPLE2_MAP) -o $(APPLE2_OUT) $? $(APPLE2_CFLAGS) -C src/game-of-life.cfg
 
 apple2-asm: $(APPLE2_SRC)
 				$(APPLE2_CC) $(APPLE2_CFLAGS) -r -T $?
