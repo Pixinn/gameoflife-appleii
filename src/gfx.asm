@@ -43,7 +43,7 @@ Page_Current:       .byte       0
 Page_Future:        .byte       0
 
 .DATA
-;Pages are composed of lines. Here are their 1st pixel adress
+;Pages are composed of lines. Here are their 1st pixel address
 Page1:  .word $400, $480, $500, $580, $600, $680, $700, $780, $428, $4A8, $528, $5A8, $628, $6A8, $728, $7A8, $450, $4D0, $550, $5D0, $650, $6D0, $750, $7D0
 Page2:  .word $800, $880, $900, $980, $A00, $A80, $B00, $B80, $828, $8A8, $928, $9A8, $A28, $AA8, $B28, $BA8, $850, $8D0, $950, $9D0, $A50, $AD0, $B50, $BD0
 
