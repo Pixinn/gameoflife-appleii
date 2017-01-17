@@ -230,21 +230,25 @@ void editor( void )
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
+                note(SIXTY_FOURTH, G3);
                 update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor > 1u ) { --x_cursor; }
           break;
         case KEY_DOWN:
+                note(SIXTY_FOURTH, G3);
                 update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor < NB_LINES-2u ) { ++y_cursor; }
           break;
         case KEY_UP:
+                note(SIXTY_FOURTH, G3);
                 update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor > 1u ) { --y_cursor; }
           break;
         case KEY_RIGHT:
+                note(SIXTY_FOURTH, G3);
                 update_color = 1;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor < NB_COLUMNS-2u ) {	++x_cursor; }
@@ -255,6 +259,7 @@ void editor( void )
                 {
                   update_color = 1;
                   toggle_cell( x_cursor++, y_cursor );
+                  note(SIXTY_FOURTH, G5);
                 }
                 break;
         case 'l':
@@ -384,6 +389,7 @@ void run( void  )
 /****** HIRES SCREEN DEFINITIONS ***********/
 #define HIRES_PAGE2     (char*)0x4000
 #define HIRES_PAGE_SIZE 0x2000
+#define SWITCH_TEXT *((uint8_t*)0xC050)=0
 #define SWITCH_GRAPHICS *((uint8_t*)0xC050)=1
 #define SWITCH_FULLSCREEN *((uint8_t*)0xC052)=1
 #define SWITCH_PAGE2 *((uint8_t*)0xC055)=1
@@ -395,37 +401,35 @@ void run( void  )
 //The Title Screen asset is located in the "assets" folder
 void title_screen( void )
 {
+  //Loading and displaying the picture
   uint8_t handle;
   file_open("GOL.SCREEN", &handle);
-  if(file_read( handle, HIRES_PAGE2, HIRES_PAGE_SIZE ) != HIRES_PAGE_SIZE )  {
-    printf("\nERROR, CANNOT READ GOL.SCREEN\nERRNO: %x\n\n", file_error());
-    file_close(handle);
-    exit(-1);
-  }
-  file_close(handle);
-
   SWITCH_GRAPHICS;
   SWITCH_FULLSCREEN;
   SWITCH_PAGE2;
   SWITCH_HIRES;
+  if(file_read( handle, HIRES_PAGE2, HIRES_PAGE_SIZE ) != HIRES_PAGE_SIZE )  {
+    printf("\nERROR, CANNOT READ GOL.SCREEN\nERRNO: %x\n\n", file_error());
+    file_close(handle);
+    SWITCH_TEXT;
+    exit(-1);
+  }
+  file_close(handle);
 
-  CLEAR_KEYBOARD_STROBE
   //Playing the music
-  pause(WHOLE);
-  if( KEY_PRESSED ) { return; }
+  pause(HALF);
+
   note(WHOLE, D4);
   note(QUARTER, F4);
   note(HALF, G4);
   note(QUARTER, As4);
 
-  if( KEY_PRESSED ) { return; }
   pause(QUARTER);
 
   note(QUARTER, F5);
   note(QUARTER, D5);
   note(WHOLE, C5);
 
-  if( KEY_PRESSED ) { return; }
   pause(QUARTER);
 
   note(EIGHTH, As4);
@@ -436,7 +440,6 @@ void title_screen( void )
   note(EIGHTH, A4);
   note(WHOLE, G4);
 
-  if( KEY_PRESSED ) { return; }
   pause(EIGHTH);
 
   note(QUARTER, F4);
