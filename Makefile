@@ -5,7 +5,7 @@ LINUX_OUT	:= bin/gol.out
 
 APPLE2_CL	:= $(CC65_HOME)/bin/cl65
 APPLE2_CC	:= $(CC65_HOME)/bin/cc65
-APPLE2_SRC	:= src/gol_apple2.c src/gol_apple2_optimized.asm src/gfx.asm src/rnd_colors.asm src/file_io.c src/mli.asm
+APPLE2_SRC	:= src/gol_apple2.c src/gol_apple2_optimized.asm src/gfx.asm src/rnd_colors.asm src/file_io.c src/mli.asm src/music.asm
 APPLE2_MAP  := gol_apple2.map
 APPLE2_CFLAGS	:= -Oirs -v -t apple2
 APPLE2_OUT	:= bin/gol.a2

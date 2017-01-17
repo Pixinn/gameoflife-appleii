@@ -27,6 +27,7 @@
 #include "gfx.h"
 #include "rnd_colors.h"
 #include "file_io.h"
+#include "music.h"
 
 /******************* FUNCTION DEFINITIONS **************/
 
@@ -85,7 +86,6 @@ enum {
 static uint8_t Cells[ NB_COLUMNS ][ NB_LINES ];
 static uint8_t Cells_Future[ NB_COLUMNS ][ NB_LINES ];
 static uint8_t Cells_Initial[ NB_COLUMNS ][ NB_LINES ];
-//static uint8_t Title_Screen[ 0x2000 ];
 
 /******************** CODE ************************/
 
@@ -388,6 +388,9 @@ void run( void  )
 #define SWITCH_FULLSCREEN *((uint8_t*)0xC052)=1
 #define SWITCH_PAGE2 *((uint8_t*)0xC055)=1
 #define SWITCH_HIRES *((uint8_t*)0xC057)=1
+/******* KEYBOARD ***********/
+#define CLEAR_KEYBOARD_STROBE *((uint8_t*)0xC010)=1;
+#define KEY_PRESSED (*((uint8_t*)0xC000)&0x7F) != 0
 
 //The Title Screen asset is located in the "assets" folder
 void title_screen( void )
@@ -406,5 +409,37 @@ void title_screen( void )
   SWITCH_PAGE2;
   SWITCH_HIRES;
 
-  cgetc();
+  CLEAR_KEYBOARD_STROBE
+  //Playing the music
+  pause(WHOLE);
+  if( KEY_PRESSED ) { return; }
+  note(WHOLE, D4);
+  note(QUARTER, F4);
+  note(HALF, G4);
+  note(QUARTER, As4);
+
+  if( KEY_PRESSED ) { return; }
+  pause(QUARTER);
+
+  note(QUARTER, F5);
+  note(QUARTER, D5);
+  note(WHOLE, C5);
+
+  if( KEY_PRESSED ) { return; }
+  pause(QUARTER);
+
+  note(EIGHTH, As4);
+  note(EIGHTH, A4);
+  note(EIGHTH, As4);
+  note(EIGHTH, A4);
+  note(EIGHTH, As4);
+  note(EIGHTH, A4);
+  note(WHOLE, G4);
+
+  if( KEY_PRESSED ) { return; }
+  pause(EIGHTH);
+
+  note(QUARTER, F4);
+  note(QUARTER, G5);
+
 }
