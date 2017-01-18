@@ -119,14 +119,12 @@ int main( int argc, char** argv )
             case STATE_RUN:
                 clear_text();
                 run();
-                if( KeyPressed == 'e' ) { /* Go back to editor */
+                if( KeyPressed == 's' ) { /* Go back to editor */
                     State = STATE_EDITOR;
                 } else if( KeyPressed == 'r' ) { /* reset and rerun */
                     memcpy( Cells, Cells_Initial, sizeof(Cells) );
                     memcpy( Cells_Future, Cells_Initial, sizeof(Cells_Future) );
                     draw_cells();
-                } else if( KeyPressed == 'q' ) { /* quit */
-                    State = STATE_QUIT;
                 }
                 break;
             default:
@@ -147,7 +145,7 @@ void quit( void )
     mode_text();
     screensize (&x, &y);
     clrscr();
-    printf("\n *** THIS WAS LIFE BY WWW.XTOF.INFO ***\nn");
+    printf("\n       *** READ WWW.XTOF.INFO ***\nn");
     exit(0);
 }
 
@@ -205,7 +203,7 @@ void draw_cells( void ) {
     }
 }
 
-
+const char* const Text_Editor ="H K U J: Move the cursor\nSPACE  : Toggle a cell\n(L)oad - (S)ave - (R)un\n(A)bout";
 void editor( void )
 {
     #define KEY_LEFT    'h'
@@ -217,8 +215,7 @@ void editor( void )
     uint8_t color_pixel;
     uint8_t update_color = 1;
 
-    const char* const text = "H K U J: Move the cursor\nSPACE  : Toggle a cell\nn(L)oad - (S)ave - (R)un - (A)bout";
-    set_text( text );
+    set_text( Text_Editor );
 
     //Place the cursor middle screen
     x_cursor = NB_COLUMNS >> 1u;
@@ -270,14 +267,14 @@ void editor( void )
             draw_cells();
             update_color = 1;
           }
-          set_text( text );
+          set_text( Text_Editor );
           break;
         case 's':
           if( editor_load_save( SAVE ) == 0) {
             set_text( "Stage saved!\nnPress a key to continue." );
             cgetc();
           }
-          set_text( text );
+          set_text( Text_Editor );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
           update_color = 0;
           break;
@@ -375,7 +372,7 @@ void run( void  )
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
     gotoxy( 0u, PRINTF_LINE+1 );
-    printf("Iteration:1\nn(R)eset (E)ditor (Q)uit");
+    printf("Iteration:1\n(R)eset (S)top");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
@@ -471,5 +468,6 @@ Follow me on Twitter: @pixinn\n\n\
      FEEL FREE TO SHARE THIS DISK!" );
      cgetc();
      init_display();
+     set_text( Text_Editor );
      draw_cells();
 }
