@@ -42,7 +42,9 @@ int8_t editor_load_save( const uint8_t load_or_save );
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
 void title_screen( void );             /* Loads and display the title screen */
-void run( void );                           /* runs the simulation */
+void run( void );                      /* runs the simulation */
+void about( void );                          /* displays the About screen */
+
 void __fastcall__ update( void );      /* updates the simulation */
 uint8_t __fastcall__  count_neighbours( uint8_t* cell );                /* counts nb neighbours of the cell */
 
@@ -145,7 +147,7 @@ void quit( void )
     mode_text();
     screensize (&x, &y);
     clrscr();
-    printf("\n *** THIS WAS LIFE BY WWW.XTOF.INFO ***\n\n");
+    printf("\n *** THIS WAS LIFE BY WWW.XTOF.INFO ***\nn");
     exit(0);
 }
 
@@ -215,7 +217,7 @@ void editor( void )
     uint8_t color_pixel;
     uint8_t update_color = 1;
 
-    const char* const text = "H K U J: Move the cursor\nSPACE  : Toggle a cell\n\n(L)oad - (S)ave - (D)one";
+    const char* const text = "H K U J: Move the cursor\nSPACE  : Toggle a cell\nn(L)oad - (S)ave - (R)un - (A)bout";
     set_text( text );
 
     //Place the cursor middle screen
@@ -272,18 +274,20 @@ void editor( void )
           break;
         case 's':
           if( editor_load_save( SAVE ) == 0) {
-            set_text( "Stage saved!\n\nPress a key to continue." );
+            set_text( "Stage saved!\nnPress a key to continue." );
             cgetc();
           }
           set_text( text );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
           update_color = 0;
           break;
-        case 'd':
+        case 'r':
           quit = 1;
           gfx_pixel( color_pixel, x_cursor, y_cursor ); //clear cursor
           update_color = 0;
           break;
+        case 'a':
+          about();
         default:
           update_color = 0;
           break;
@@ -338,7 +342,7 @@ int8_t editor_load_save( const uint8_t load_or_save )
   load_or_save == LOAD ?  nb_bytes =  file_read( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES ) : \
                           nb_bytes =  file_write( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES );
   if( file_error() != NO_ERROR || nb_bytes != NB_COLUMNS*NB_LINES ) {
-    sprintf( custom_text, "An error occured: %x\n\nPress a key to continue.", file_error() );
+    sprintf( custom_text, "An error occured: %x\nnPress a key to continue.", file_error() );
     set_text( custom_text );
     cgetc();
     file_close( handle );
@@ -371,7 +375,7 @@ void run( void  )
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
     gotoxy( 0u, PRINTF_LINE+1 );
-    printf("Iteration:1\n\n(R)eset (E)ditor (Q)uit");
+    printf("Iteration:1\nn(R)eset (E)ditor (Q)uit");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
@@ -409,7 +413,7 @@ void title_screen( void )
   SWITCH_PAGE2;
   SWITCH_HIRES;
   if(file_read( handle, HIRES_PAGE2, HIRES_PAGE_SIZE ) != HIRES_PAGE_SIZE )  {
-    printf("\nERROR, CANNOT READ GOL.SCREEN\nERRNO: %x\n\n", file_error());
+    printf("\nERROR, CANNOT READ GOL.SCREEN\nERRNO: %x\nn", file_error());
     file_close(handle);
     SWITCH_TEXT;
     exit(-1);
@@ -444,5 +448,28 @@ void title_screen( void )
 
   note(QUARTER, F4);
   note(QUARTER, G5);
+}
 
+
+
+void about( void )
+{
+  register uint8_t i;
+  mode_text();
+  gotoxy( 0u, 0u );
+  for( i = 0; i < 24u; ++i ) {
+      printf("                                       "); /* clears a line */
+  }
+  gotoxy( 0u, 0u );
+
+  printf(  "         *** A GAME OF LIFE ***\n             --------------\n\n\
+This port of Conway's Game of life was\nprogrammed by Christophe Meneboeuf.\n\
+The code is available on my GitHub:\nhttps://www.github.com/pixinn\n\
+In depth articles available on my blog:\nhttps://www.xtof.info/blog/\n\
+Follow me on Twitter: @pixinn\n\n\
+------\nMusic by Clint Slate\nhttps://www.facebook.com/clintslate\n------\n\n\
+     FEEL FREE TO SHARE THIS DISK!" );
+     cgetc();
+     init_display();
+     draw_cells();
 }
