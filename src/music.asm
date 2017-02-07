@@ -8,8 +8,6 @@
 .export         _pause
 
 .DATA
-Loops:  .byte 149, 141, 133, 125, 118, 111, 105, 99, 94, 88, 83, 78 ;Note loops
-Test:   .word   31100
 
 ;NB nop loops of each note, lasting hal a period
 Half_Periods:     .byte  251, 237, 224, 211, 199, 188, 177, 167, 158
