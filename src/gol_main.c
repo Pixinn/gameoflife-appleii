@@ -41,6 +41,7 @@ void editor( void );                    /* lets the user draw some starting cell
 int8_t editor_load_save( const uint8_t load_or_save );
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
+uint16_t my_sleep(const uint8_t time);    /* "Sleeps" for an amount of time. 1 ~= 4.2ms  A dummy value is returned to trick the optimizer */
 void title_screen( void );             /* Loads and display the title screen */
 void run( void );                      /* runs the simulation */
 void about( void );                          /* displays the About screen */
@@ -259,6 +260,7 @@ void editor( void )
                   update_color = 1;
                   toggle_cell( x_cursor++, y_cursor );
                   note(SIXTY_FOURTH, G5);
+                  my_sleep(5);  /* ~22ms */
                 }
                 break;
         case 'l':
@@ -363,6 +365,18 @@ void toggle_cell( const uint8_t x, const uint8_t y )
         *cell = DEAD;
         gfx_pixel( BLACK, x, y );
     }
+}
+
+
+uint16_t my_sleep(const uint8_t time)
+{
+    uint16_t i;
+    volatile uint16_t dummy = 0u;
+    uint16_t nb_iter = time << 7;
+    for(i = 0u; i < nb_iter; ++i) {
+        dummy += i;
+    }
+    return dummy;
 }
 
 
