@@ -40,7 +40,9 @@ void clear_text( void );                /* Clears the 4 line text field in split
 void set_text( const char* const text );/* Prints a custom text into the 4 line text field in splitted mode */
 void draw_cells( void );                /* Draws the actual cells */
 void editor( void );                    /* lets the user draw some starting cells */
+int8_t editor_erase( void );            /* erases the content of the edit window */
 int8_t editor_load_save( const uint8_t load_or_save );
+int8_t file_load_save(char* filename, const uint8_t load_or_save, uint8_t* buffer, const uint16_t len);
 void toggle_cell( const uint8_t x, const uint8_t y ); /* toggles the cell at the given coordinates. \
                                                             Returns the cursor X position */
 uint16_t my_sleep(const uint8_t time);    /* "Sleeps" for an amount of time. 1 ~= 4.2ms  A dummy value is returned to trick the optimizer */
@@ -84,6 +86,12 @@ char KeyPressed = NO_KEY;
 enum {
   LOAD,
   SAVE
+};
+
+enum{
+    ERR_FILE_NOERROR,
+    ERR_FILE_OPEN,
+    ERR_FILE_READ
 };
 
 enum eMyBoolean {
@@ -240,7 +248,7 @@ void draw_cells( void ) {
     }
 }
 
-const char* const Text_Editor ="H K U J: Move the cursor\nSPACE  : Toggle a cell\n(L)oad - (S)ave - (R)un\n(A)bout";
+const char* const Text_Editor ="H K U J: Move the cursor\nSPACE  : Toggle a cell\n(L)oad - (S)ave - (E)rase - (R)un\n(A)bout";
 void editor( void )
 {
     #define KEY_LEFT    'h'
@@ -323,13 +331,22 @@ void editor( void )
           break;
         case 's':
           if( editor_load_save( SAVE ) == 0) {
-            set_text( "Stage saved!\nnPress a key to continue." );
+            set_text( "Stage saved!\nPress a key to continue." );
             cgetc();
           }
           set_text( Text_Editor );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
           update_color = FALSE;
           update_coords = TRUE;
+          break;
+        case 'e':
+          update_coords = TRUE;
+          update_color = FALSE;
+          if( editor_erase() == 0 ) {
+              draw_cells();
+              update_color = TRUE;
+          }
+          set_text( Text_Editor );
           break;
         case 'r':
           quit = 1;
@@ -360,51 +377,80 @@ int8_t editor_load_save( const uint8_t load_or_save )
 {
   // NOTE sprintf with %s does not work...
   #define ESC 0x1B
-  uint8_t handle;
   char filename[ SAVENAME_LENGTH + 1 ];
   char custom_text[ 80 ];
   char str_custom[ 8 ];
   char num;
-  uint16_t nb_bytes;
+  int8_t err_file;
+
   load_or_save == LOAD ?  strcpy( str_custom, "loaded ") : \
                           strcpy( str_custom, "saved ");
   do {
     strcpy( custom_text, "Enter the slot number to be " );
     strcat( custom_text, str_custom );
-    strcat( custom_text,  "[0-9]\nOr press escape to cancel.\n" );
+    strcat( custom_text,  "[1-9]\nOr press escape to cancel.\n" );
     set_text( custom_text );
     num = cgetc();
-  } while( num != ESC && (num < 0x30 || num > 0x39) );
+  } while( num != ESC && (num < 0x31 || num > 0x39) );
   if( num == ESC ) { return -1; }
 
   strcpy( filename, SAVENAME );
   filename[ SAVENAME_LENGTH - 1 ] = num;
   filename[ SAVENAME_LENGTH ] = '\0';
-  file_open( filename, &handle );
   strcpy( custom_text, "Accessing: " );
   strcat( custom_text, filename );
   set_text( custom_text );
-  if( file_error() != NO_ERROR ) {
-    strcpy( custom_text, "Cannot open file to be " );
-    strcat( custom_text, str_custom );
-    set_text( custom_text );
-    cgetc();
-    file_close( handle );
-    return -1;
+  err_file = file_load_save(filename, load_or_save, (uint8_t*)Cells, NB_COLUMNS*NB_LINES);
+  if(err_file == ERR_FILE_OPEN) {
+      strcpy( custom_text, "Cannot open file to be " );
+      strcat( custom_text, str_custom );
+      set_text( custom_text );
+      cgetc();
+      return -1;
   }
-  load_or_save == LOAD ?  nb_bytes =  file_read( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES ) : \
-                          nb_bytes =  file_write( handle, (uint8_t*)Cells, NB_COLUMNS*NB_LINES );
-  if( file_error() != NO_ERROR || nb_bytes != NB_COLUMNS*NB_LINES ) {
-    sprintf( custom_text, "An error occured: %x\nnPress a key to continue.", file_error() );
-    set_text( custom_text );
-    cgetc();
-    file_close( handle );
-    return -1;
+  else if( err_file == ERR_FILE_READ) {
+      sprintf( custom_text, "An error occured: %x\nPress a key to continue.", file_error() );
+      set_text( custom_text );
+      cgetc();
+      return -1;
   }
-  file_close( handle );
   return 0;
 }
 
+// A generic function to load / save the content of a file to / from a buffer
+// filename: file to load / save
+// load_or_save: LOAD or SAVE?
+// buffer: buffer to write / read
+// len: length to write / read
+int8_t file_load_save(char* filename, const uint8_t load_or_save, uint8_t* buffer, const uint16_t len)
+{
+    uint16_t nb_bytes;
+    uint8_t handle;
+    file_open( filename, &handle );
+    if( file_error() != NO_ERROR ) {
+      file_close( handle );
+      return ERR_FILE_OPEN;
+    }
+    load_or_save == LOAD ?  nb_bytes =  file_read( handle, buffer, len ) : \
+                            nb_bytes =  file_write( handle, buffer, len );
+    if( file_error() != NO_ERROR || nb_bytes != len ) {
+      file_close( handle );
+      return ERR_FILE_READ;
+    }
+    file_close( handle );
+    return ERR_FILE_NOERROR;
+}
+
+// Resets loads the SAVE #0 that is inaccessible otherwise
+int8_t editor_erase( void )
+{
+    char filename[ SAVENAME_LENGTH + 1 ];
+    set_text( "Clearing the screen..." );
+    strcpy( filename, SAVENAME );
+    filename[ SAVENAME_LENGTH - 1 ] = 0x30;
+    filename[ SAVENAME_LENGTH ] = '\0';
+    return file_load_save(filename, LOAD, (uint8_t*)Cells, NB_COLUMNS*NB_LINES) == ERR_FILE_NOERROR ? 0 : -1;
+}
 
 
 void toggle_cell( const uint8_t x, const uint8_t y )
@@ -440,7 +486,7 @@ void run( void  )
     uint16_t nb_iterations = 2u;
     KeyPressed = NO_KEY;
     gotoxy( 0u, PRINTF_LINE+1 );
-    printf("Iteration:1\n(R)eset (S)top");
+    printf("Iteration:1\n(R)estart (S)top");
     while( KeyPressed == NO_KEY)
     {
         /* Evolving the cells */
