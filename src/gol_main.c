@@ -31,6 +31,8 @@
 
 /******************* FUNCTION DEFINITIONS **************/
 
+
+
 void __fastcall__ init_asm( uint8_t* p_cell, uint8_t* p_cells_future );  /* Inits the variables used in the ASM scope */
 
 void init_display( void );              /* Inits displayed playfield */
@@ -82,6 +84,11 @@ char KeyPressed = NO_KEY;
 enum {
   LOAD,
   SAVE
+};
+
+enum eMyBoolean {
+    FALSE = 0,
+    TRUE = 1
 };
 
 /******************* STATIC GLOBAL VARIABLES ******************/
@@ -151,9 +158,37 @@ void quit( void )
 }
 
 
+void clear_coords()
+{
+    gotoxy(NB_COLUMNS-6, PRINTF_LINE+3);
+    printf("     ");
+}
+
+void print_coords(const uint8_t x, const uint8_t y)
+{
+    uint8_t len_coord_cursor_x_len;
+    char   buf_coord_cursor[10];
+    char   buf_coord_cursor_y[5];
+
+    /* Clears the coords */
+    clear_coords();
+    /* Coords to ascii */
+    itoa(x, buf_coord_cursor, 10);
+    len_coord_cursor_x_len = strlen(buf_coord_cursor);
+    itoa(y, buf_coord_cursor_y, 10);
+    strcat(buf_coord_cursor, ":");
+    strcat(buf_coord_cursor, buf_coord_cursor_y);
+
+    gotoxy(NB_COLUMNS-6+(2-len_coord_cursor_x_len), PRINTF_LINE+3);
+    /* Prints the coords */
+    printf(buf_coord_cursor);
+}
+
+
 void clear_text( void )
 {
     register uint8_t i;
+    clear_coords();
     gotoxy( 0u, PRINTF_LINE );
     for( i = 0; i < 4u; ++i ) {
         printf("                                       "); /* clears a line */
@@ -166,6 +201,7 @@ void set_text( const char* const text )
   gotoxy( 0u, PRINTF_LINE );
   printf( text );
 }
+
 
 
 void init_display( void )
@@ -214,7 +250,8 @@ void editor( void )
 
     uint8_t quit, x_cursor, y_cursor;
     uint8_t color_pixel;
-    uint8_t update_color = 1;
+    uint8_t update_color = TRUE;
+    uint8_t update_coords = TRUE;
 
     set_text( Text_Editor );
 
@@ -222,34 +259,45 @@ void editor( void )
     x_cursor = NB_COLUMNS >> 1u;
     y_cursor = NB_LINES >> 1u;
 
-    quit = 0;
-    while ( quit == 0)
+    quit = 0u;
+    while ( quit == 0u)
     {
-        if (update_color) { color_pixel = gfx_get_pixel( x_cursor, y_cursor ); }
+        if (update_coords != FALSE)
+        {
+            print_coords(x_cursor, y_cursor);
+            update_coords = FALSE;
+        }
+        if (update_color != FALSE) {
+            color_pixel = gfx_get_pixel( x_cursor, y_cursor );
+        }
         gfx_pixel( CURSOR_COLOR, x_cursor, y_cursor ); //cursor
         KeyPressed = cgetc();
         switch (KeyPressed) {
         case KEY_LEFT:
                 note(SIXTY_FOURTH, G3);
-                update_color = 1;
+                update_color = TRUE;
+                update_coords = TRUE;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor > 1u ) { --x_cursor; }
           break;
         case KEY_DOWN:
                 note(SIXTY_FOURTH, G3);
-                update_color = 1;
+                update_color = TRUE;
+                update_coords = TRUE;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor < NB_LINES-2u ) { ++y_cursor; }
           break;
         case KEY_UP:
                 note(SIXTY_FOURTH, G3);
-                update_color = 1;
+                update_color = TRUE;
+                update_coords = TRUE;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( y_cursor > 1u ) { --y_cursor; }
           break;
         case KEY_RIGHT:
                 note(SIXTY_FOURTH, G3);
-                update_color = 1;
+                update_color = TRUE;
+                update_coords = TRUE;
                 gfx_pixel( color_pixel, x_cursor, y_cursor );
                 if( x_cursor < NB_COLUMNS-2u ) {	++x_cursor; }
           break;
@@ -257,17 +305,19 @@ void editor( void )
                 if(    x_cursor > 0u && x_cursor < NB_COLUMNS-1u
                     && y_cursor > 0u &&  y_cursor < NB_LINES-1u )
                 {
-                  update_color = 1;
+                  update_color = TRUE;
+                  update_coords = TRUE;
                   toggle_cell( x_cursor++, y_cursor );
                   note(SIXTY_FOURTH, G5);
-                  my_sleep(5);  /* ~22ms */
+                  my_sleep(5u);  /* ~22ms */
                 }
                 break;
         case 'l':
-          update_color = 0;
+          update_color = FALSE;
+          update_coords = TRUE;
           if( editor_load_save( LOAD ) == 0 ) {
             draw_cells();
-            update_color = 1;
+            update_color = TRUE;
           }
           set_text( Text_Editor );
           break;
@@ -278,17 +328,21 @@ void editor( void )
           }
           set_text( Text_Editor );
           gfx_pixel( color_pixel, x_cursor, y_cursor );
-          update_color = 0;
+          update_color = FALSE;
+          update_coords = TRUE;
           break;
         case 'r':
           quit = 1;
           gfx_pixel( color_pixel, x_cursor, y_cursor ); //clear cursor
-          update_color = 0;
+          update_color = FALSE;
+          update_coords = TRUE;
           break;
         case 'a':
           about();
+          update_coords = TRUE;
         default:
-          update_color = 0;
+          update_color = FALSE;
+          update_coords = FALSE;
           break;
         }
     }
@@ -465,12 +519,8 @@ void title_screen( void )
 
 void about( void )
 {
-  register uint8_t i;
+  clrscr();;
   mode_text();
-  gotoxy( 0u, 0u );
-  for( i = 0; i < 24u; ++i ) {
-      printf("                                       "); /* clears a line */
-  }
   gotoxy( 0u, 0u );
 
   printf(  "         *** A GAME OF LIFE ***\n             --------------\n\n\
